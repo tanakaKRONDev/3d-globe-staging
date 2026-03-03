@@ -8,7 +8,7 @@ import { join } from 'path'
 import { execSync } from 'child_process'
 
 const STOPS_JSON = 'public/data/stops.all.json'
-const DB_NAME = 'tour-stops'
+const DB_NAME = 'db'
 
 function escape(str: string | null | undefined): string {
   if (str == null) return 'NULL'

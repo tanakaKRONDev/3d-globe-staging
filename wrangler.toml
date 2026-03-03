@@ -6,11 +6,12 @@ compatibility_date = "2024-01-01"
 # D1 (Tour Stops Database)
 # -------------------------
 # Create it with:
-#   npx wrangler d1 create tour-stops
+#   npx wrangler d1 create db
 # Then paste the database_id below.
 [[d1_databases]]
 binding = "DB"
-database_name = "tour-stops"
+database_name = "db"
+# database_id = "ab55959b-9283-4377-9afc-346231547873"
 database_id = "976cf376-3db0-4c28-b05a-493c8a89406f"
 migrations_dir = "migrations"
 
