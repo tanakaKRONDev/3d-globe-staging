@@ -27,7 +27,11 @@
     "buildings:rebuild:batch2": "tsx scripts/fetch-buildings.ts --force --only-missing false --strict --between-ms 2500 --from 13 --to 24",
     "buildings:rebuild:batch3": "tsx scripts/fetch-buildings.ts --force --only-missing false --strict --between-ms 2500 --from 25 --to 55",
     "buildings:rebuild:missing": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3000",
-    "buildings:retry:la": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3500 --from 12 --to 12"
+    "buildings:retry:la": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3500 --from 12 --to 12",
+    "db:migrate": "wrangler d1 migrations apply tour-stops",
+    "db:migrate:local": "wrangler d1 migrations apply tour-stops --local",
+    "db:seed": "tsx scripts/seed-d1.ts",
+    "db:seed:remote": "tsx scripts/seed-d1.ts --remote"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.13",

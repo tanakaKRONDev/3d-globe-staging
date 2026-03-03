@@ -2,6 +2,13 @@ name = "3d-globe-landing-page"
 compatibility_date = "2024-01-01"
 main = "worker.js"
 
+# D1 database for tour stops (run: wrangler d1 create tour-stops)
+[[d1_databases]]
+binding = "DB"
+database_name = "tour-stops"
+database_id = ""  # Set after: wrangler d1 create tour-stops
+migrations_dir = "migrations"
+
 [env.production]
 account_id = ""  # Add your Cloudflare account ID here
 
