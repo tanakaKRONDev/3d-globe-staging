@@ -28,10 +28,12 @@
     "buildings:rebuild:batch3": "tsx scripts/fetch-buildings.ts --force --only-missing false --strict --between-ms 2500 --from 25 --to 55",
     "buildings:rebuild:missing": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3000",
     "buildings:retry:la": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3500 --from 12 --to 12",
-    "db:migrate": "wrangler d1 migrations apply tour-stops",
-    "db:migrate:local": "wrangler d1 migrations apply tour-stops --local",
-    "db:seed": "tsx scripts/seed-d1.ts",
-    "db:seed:remote": "tsx scripts/seed-d1.ts --remote"
+    "db:migrate:local": "npx wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "npx wrangler d1 migrations apply DB --remote",
+    "db:seed:local": "tsx scripts/generate-seed-sql.ts && npx wrangler d1 execute DB --local --file scripts/seed.generated.sql",
+    "db:seed:remote": "tsx scripts/generate-seed-sql.ts && npx wrangler d1 execute DB --remote --file scripts/seed.generated.sql",
+    "db:check:local": "npx wrangler d1 execute DB --local --file scripts/check.sql",
+    "db:check:remote": "npx wrangler d1 execute DB --remote --file scripts/check.sql"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.13",
