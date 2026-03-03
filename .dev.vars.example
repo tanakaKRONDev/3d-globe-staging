@@ -1,0 +1,4 @@
+# Copy to .dev.vars (do not commit .dev.vars)
+# Used for local `wrangler dev` / `wrangler pages dev`
+
+SITE_PASSWORD=yourpass

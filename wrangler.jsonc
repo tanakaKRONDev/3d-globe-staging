@@ -1,0 +1,11 @@
+{
+  "name": "3d-globe-landing-page",
+  "compatibility_date": "2026-02-20",
+  "main": "worker.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  }
+}

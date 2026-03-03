@@ -1,0 +1,614 @@
+[
+  {
+    "id": "1-chicago-us-united-center",
+    "order": 1,
+    "city": "Chicago, US",
+    "countryCode": "US",
+    "venue": "United Center",
+    "capacityMin": 13500,
+    "capacityMax": 16500,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "2-toronto-ca-scotiabank-arena",
+    "order": 2,
+    "city": "Toronto, CA",
+    "countryCode": "CA",
+    "venue": "Scotiabank Arena",
+    "capacityMin": 13500,
+    "capacityMax": 15500,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "3-montreal-ca-bell-centre",
+    "order": 3,
+    "city": "Montreal, CA",
+    "countryCode": "CA",
+    "venue": "Bell Centre",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "4-boston-us-td-garden",
+    "order": 4,
+    "city": "Boston, US",
+    "countryCode": "US",
+    "venue": "TD Garden",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "5-washington-d-c-us-capital-one-arena",
+    "order": 5,
+    "city": "Washington D.C., US",
+    "countryCode": "US",
+    "venue": "Capital One Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "6-charlotte-us-spectrum-center",
+    "order": 6,
+    "city": "Charlotte, US",
+    "countryCode": "US",
+    "venue": "Spectrum Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "7-nashville-us-bridgestone-arena",
+    "order": 7,
+    "city": "Nashville, US",
+    "countryCode": "US",
+    "venue": "Bridgestone Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "8-miami-us-kaseya-center",
+    "order": 8,
+    "city": "Miami, US",
+    "countryCode": "US",
+    "venue": "Kaseya Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "9-austin-us-moody-center",
+    "order": 9,
+    "city": "Austin, US",
+    "countryCode": "US",
+    "venue": "Moody Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "10-dallas-us-american-airlines-center",
+    "order": 10,
+    "city": "Dallas, US",
+    "countryCode": "US",
+    "venue": "American Airlines Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "11-houston-us-toyota-center",
+    "order": 11,
+    "city": "Houston, US",
+    "countryCode": "US",
+    "venue": "Toyota Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "12-los-angeles-us-los-angeles-memorial-coliseum",
+    "order": 12,
+    "city": "Los Angeles, US",
+    "countryCode": "US",
+    "venue": "Los Angeles Memorial Coliseum",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "13-brooklyn-us-barclays-center",
+    "order": 13,
+    "city": "Brooklyn, US",
+    "countryCode": "US",
+    "venue": "Barclays Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "14-oakland-us-oakland-arena",
+    "order": 14,
+    "city": "Oakland, US",
+    "countryCode": "US",
+    "venue": "Oakland Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "15-columbus-us-nationwide-arena",
+    "order": 15,
+    "city": "Columbus, US",
+    "countryCode": "US",
+    "venue": "Nationwide Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "16-champaign-us-state-farm-center",
+    "order": 16,
+    "city": "Champaign, US",
+    "countryCode": "US",
+    "venue": "State Farm Center",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "17-paris-fr-zenith",
+    "order": 17,
+    "city": "Paris, FR",
+    "countryCode": "FR",
+    "venue": "Zenith",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "18-manchester-uk-o2-victoria-warehouse",
+    "order": 18,
+    "city": "Manchester, UK",
+    "countryCode": "UK",
+    "venue": "O2 Victoria Warehouse",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "19-london-uk-the-o2-arena",
+    "order": 19,
+    "city": "London, UK",
+    "countryCode": "UK",
+    "venue": "The O2 Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "20-milan-it-fabrique",
+    "order": 20,
+    "city": "Milan, IT",
+    "countryCode": "IT",
+    "venue": "Fabrique",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "21-cologne-de-palladium",
+    "order": 21,
+    "city": "Cologne, DE",
+    "countryCode": "DE",
+    "venue": "Palladium",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "22-berlin-de-columbiahalle",
+    "order": 22,
+    "city": "Berlin, DE",
+    "countryCode": "DE",
+    "venue": "Columbiahalle",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "23-amsterdam-nl-afas-live",
+    "order": 23,
+    "city": "Amsterdam, NL",
+    "countryCode": "NL",
+    "venue": "AFAS Live",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "24-madrid-es-movistar-arena",
+    "order": 24,
+    "city": "Madrid, ES",
+    "countryCode": "ES",
+    "venue": "Movistar Arena",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "25-barcelona-es-razzmatazz",
+    "order": 25,
+    "city": "Barcelona, ES",
+    "countryCode": "ES",
+    "venue": "Razzmatazz",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "26-brussels-be-ancienne-belgique",
+    "order": 26,
+    "city": "Brussels, BE",
+    "countryCode": "BE",
+    "venue": "Ancienne Belgique",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "27-brazil-br-komplexo-tempo",
+    "order": 27,
+    "city": "Brazil, BR",
+    "countryCode": "BR",
+    "venue": "Komplexo Tempo",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "28-buenos-aires-ar-tbd",
+    "order": 28,
+    "city": "Buenos Aires, AR",
+    "countryCode": "AR",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "29-santiago-cl-espacio-riesco",
+    "order": 29,
+    "city": "Santiago, CL",
+    "countryCode": "CL",
+    "venue": "Espacio Riesco",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "30-lima-pu-tbd",
+    "order": 30,
+    "city": "Lima, PU",
+    "countryCode": "PU",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "31-bogota-cl-tbd",
+    "order": 31,
+    "city": "Bogota, CL",
+    "countryCode": "CL",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "32-medellin-cl-tbd",
+    "order": 32,
+    "city": "Medellin, CL",
+    "countryCode": "CL",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "33-mexico-city-mx-pepsi-center-wtc",
+    "order": 33,
+    "city": "Mexico City, MX",
+    "countryCode": "MX",
+    "venue": "Pepsi Center WTC",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "34-guadalajara-mx-tbd",
+    "order": 34,
+    "city": "Guadalajara, MX",
+    "countryCode": "MX",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "35-monterrey-mx-tbd",
+    "order": 35,
+    "city": "Monterrey, MX",
+    "countryCode": "MX",
+    "venue": "TBD",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  },
+  {
+    "id": "36-san-juan-pr-coca-cola-music-hall",
+    "order": 36,
+    "city": "San Juan, PR",
+    "countryCode": "PR",
+    "venue": "Coca-Cola Music Hall",
+    "capacityMin": null,
+    "capacityMax": null,
+    "lat": null,
+    "lng": null,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: TBD"
+    ]
+  }
+]

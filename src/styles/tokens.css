@@ -1,0 +1,212 @@
+/* Premium Design Tokens */
+
+:root {
+  /* Color System */
+  --bg: #070A0F;
+  --bg-secondary: #0A0E15;
+  --bg-tertiary: #0D1219;
+  
+  --panel: rgba(12, 16, 24, 0.62);
+  --panel-hover: rgba(12, 16, 24, 0.75);
+  --panel-active: rgba(12, 16, 24, 0.85);
+  
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 255, 255, 0.16);
+  
+  --text: rgba(255, 255, 255, 0.88);
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-disabled: rgba(255, 255, 255, 0.25);
+  
+  --accent: #E7D1A7;
+  --accent-muted: #D4C1A0;
+  --accent-dark: #C1AE8D;
+  --accent2: #86A8FF;
+  
+  /* Typography - Roboto first (self-hosted via @fontsource/roboto) */
+  --font-sans: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-family: var(--font-sans);
+  --font-family-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", 
+                       Consolas, "Courier New", monospace;
+  
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  
+  /* Spacing Scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  /* Backdrop Blur */
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(12px);
+  --blur-xl: blur(16px);
+  
+  /* Transitions */
+  --transition-fast: 160ms ease-out;
+  --transition-normal: 220ms ease-out;
+  --transition-slow: 320ms ease-out;
+  
+  /* Layout */
+  --layout-max-width: 1440px;
+  --layout-padding: var(--space-6);
+  --layout-gap: var(--space-6);
+  
+  --rail-left-width: 360px;
+  --rail-right-width: 440px;
+  --header-height: 80px;
+  
+  /* Z-index Scale */
+  --z-base: 1;
+  --z-elevated: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-toast: 40;
+  --z-tooltip: 50;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Noise Overlay for Premium Feel */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+  background-size: 100px 100px, 150px 150px;
+  pointer-events: none;
+  z-index: var(--z-base);
+  opacity: 0.3;
+}
+
+/* Focus Styles */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Typography Classes */
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+
+.font-normal { font-weight: var(--font-weight-normal); }
+.font-medium { font-weight: var(--font-weight-medium); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+
+.text-primary { color: var(--text); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }
+
+.leading-tight { line-height: var(--line-height-tight); }
+.leading-normal { line-height: var(--line-height-normal); }
+.leading-relaxed { line-height: var(--line-height-relaxed); }
+
+.tracking-tight { letter-spacing: var(--letter-spacing-tight); }
+.tracking-normal { letter-spacing: var(--letter-spacing-normal); }
+.tracking-wide { letter-spacing: var(--letter-spacing-wide); }

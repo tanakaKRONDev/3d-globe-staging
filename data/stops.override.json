@@ -1,0 +1,22 @@
+{
+  "Chicago, US+United Center": {
+    "lat": 41.8806908,
+    "lng": -87.6741759,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: Premium venue in downtown Chicago"
+    ]
+  },
+  "Toronto, CA+Scotiabank Arena": {
+    "lat": 43.64343375,
+    "lng": -79.3790777248373,
+    "bullets": [
+      "Ticket Price: TBD",
+      "Gross Revenue: TBD",
+      "Net/Guarantee: TBD",
+      "Notes: Major arena in Toronto's entertainment district"
+    ]
+  }
+}

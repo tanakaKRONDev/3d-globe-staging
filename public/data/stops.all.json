@@ -1,0 +1,1487 @@
+[
+  {
+    "id": "1-chicago-us-united-center",
+    "order": 1,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Chicago, US",
+    "countryCode": "Chicago, US",
+    "venue": "United Center",
+    "address": "1901 W Madison St, Chicago, IL 60612",
+    "lat": 41.88068305,
+    "lng": -87.6741851044139,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - Wrigley Field",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "2-toronto-ca-scotiabank-arena",
+    "order": 2,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Toronto, CA",
+    "countryCode": "Toronto, CA",
+    "venue": "Scotiabank Arena",
+    "address": "40 Bay St., Toronto, ON M5J 3A5, Canada",
+    "lat": 43.64342985,
+    "lng": -79.3790594837324,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - Rogers Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "3-montreal-ca-bell-centre",
+    "order": 3,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Montreal, CA",
+    "countryCode": "Montreal, CA",
+    "venue": "Bell Centre",
+    "address": "1909 Av. des Canadiens-de-Montréal, Montréal, QC H3B 2S2, Canada",
+    "lat": 45.496039,
+    "lng": -73.569438,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "4-boston-us-td-garden",
+    "order": 4,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Boston, US",
+    "countryCode": "Boston, US",
+    "venue": "TD Garden",
+    "address": "100 Legends Way, Boston, MA 02114",
+    "lat": 42.3662986,
+    "lng": -71.0621622226383,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "5-washington-d-c-us-capital-one-arena",
+    "order": 5,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Washington D.C., US",
+    "countryCode": "Washington D.C., US",
+    "venue": "Capital One Arena",
+    "address": "601 F St NW, Washington, DC 20004",
+    "lat": 38.8981835,
+    "lng": -77.0209381683517,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "6-charlotte-us-spectrum-center",
+    "order": 6,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Charlotte, US",
+    "countryCode": "Charlotte, US",
+    "venue": "Spectrum Center",
+    "address": "333 E Trade St, Charlotte, NC 28202",
+    "lat": 35.2251123265306,
+    "lng": -80.8404977346939,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "7-nashville-us-bridgestone-arena",
+    "order": 7,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Nashville, US",
+    "countryCode": "Nashville, US",
+    "venue": "Bridgestone Arena",
+    "address": "501 Broadway, Nashville, TN 37203",
+    "lat": 36.1601181030273,
+    "lng": -86.7791213989258,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "8-miami-us-kaseya-center",
+    "order": 8,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Miami, US",
+    "countryCode": "Miami, US",
+    "venue": "Kaseya Center",
+    "address": "601 Biscayne Blvd, Miami, FL 33132",
+    "lat": 25.7804285714286,
+    "lng": -80.1893712857143,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - Loan Depot Park",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "9-austin-us-moody-center",
+    "order": 9,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Austin, US",
+    "countryCode": "Austin, US",
+    "venue": "Moody Center",
+    "address": "2001 Robert Dedman Dr, Austin, TX 78712",
+    "lat": 30.28093665,
+    "lng": -97.7306522348233,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "10-dallas-us-american-airlines-center",
+    "order": 10,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Dallas, US",
+    "countryCode": "Dallas, US",
+    "venue": "American Airlines Center",
+    "address": "2500 Victory Ave, Dallas, TX 75219",
+    "lat": 32.7905076,
+    "lng": -96.8102721346083,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "11-houston-us-toyota-center",
+    "order": 11,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Houston, US",
+    "countryCode": "Houston, US",
+    "venue": "Toyota Center",
+    "address": "1510 Polk St, Houston, TX 77002",
+    "lat": 29.75074725,
+    "lng": -95.3622315147709,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "12-los-angeles-us-los-angeles-memorial-coliseum",
+    "order": 12,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Los Angeles, US",
+    "countryCode": "Los Angeles, US",
+    "venue": "Los Angeles Memorial Coliseum",
+    "address": "3911 S Figueroa St, Los Angeles, CA 90037",
+    "lat": 34.013983,
+    "lng": -118.287975,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - SoFI Stadium / Dodger Stadium\n2028 August - October Special Stadium Shows or Sphere Residency - Sphere ***would replace LA/SF shows***",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "13-brooklyn-us-barclays-center",
+    "order": 13,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Brooklyn, US",
+    "countryCode": "Brooklyn, US",
+    "venue": "Barclays Center",
+    "address": "620 Atlantic Ave, Brooklyn, NY 11217",
+    "lat": 40.682658,
+    "lng": -73.9752846,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - Yankees / MeLife Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "14-oakland-us-oakland-arena",
+    "order": 14,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Oakland, US",
+    "countryCode": "Oakland, US",
+    "venue": "Oakland Arena",
+    "address": "7000 S Coliseum Wy, Oakland, CA 94621",
+    "lat": 37.75081,
+    "lng": -122.20339,
+    "notes": "2028 August - October Special Stadium Shows or Sphere Residency - Oracle Park / Stanford Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "15-columbus-us-nationwide-arena",
+    "order": 15,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Columbus, US",
+    "countryCode": "Columbus, US",
+    "venue": "Nationwide Arena",
+    "address": "200 W Nationwide Blvd, Columbus, OH 43215",
+    "lat": 39.9693512,
+    "lng": -83.0063849,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "16-champaign-us-state-farm-center",
+    "order": 16,
+    "timeline": "2026 October - December Arena Headline Tour",
+    "region": "NORTH AMERICA",
+    "city": "Champaign, US",
+    "countryCode": "Champaign, US",
+    "venue": "State Farm Center",
+    "address": "1800 S 1st St, Champaign, IL 61820",
+    "lat": 40.09625,
+    "lng": -88.23595,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "17-paris-fr-zenith",
+    "order": 17,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Paris, FR",
+    "countryCode": "Paris, FR",
+    "venue": "Zenith",
+    "address": "211 Av. Jean Jaurès, 75019 Paris, France",
+    "lat": 48.894285,
+    "lng": 2.393252,
+    "notes": "2028 Festivals + Headline Shows May - June - Accor Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "18-manchester-uk-o2-victoria-warehouse",
+    "order": 18,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Manchester, UK",
+    "countryCode": "Manchester, UK",
+    "venue": "O2 Victoria Warehouse",
+    "address": "Trafford Park, Stretford, Manchester M17 1AB, United Kingdom",
+    "lat": 53.46447,
+    "lng": -2.286,
+    "notes": "2028 Festivals + Headline Shows May - June - Co-Op Live",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "19-london-uk-the-o2-arena",
+    "order": 19,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "London, UK",
+    "countryCode": "London, UK",
+    "venue": "The O2 Arena",
+    "address": "Peninsula Square, London SE10 0DX, United Kingdom",
+    "lat": 51.5029366,
+    "lng": 0.0032029,
+    "notes": "2028 Festivals + Headline Shows May - June - The O2 Arena x2",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "20-milan-it-fabrique",
+    "order": 20,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Milan, IT",
+    "countryCode": "Milan, IT",
+    "venue": "Fabrique",
+    "address": "Via Gaudenzio Fantoli, 9, 20138 Milano MI, Italy",
+    "lat": 45.45212,
+    "lng": 9.25228,
+    "notes": "2028 Festivals + Headline Shows May - June - Unipol Forum",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "21-cologne-de-palladium",
+    "order": 21,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Cologne, DE",
+    "countryCode": "Cologne, DE",
+    "venue": "Palladium",
+    "address": "Schanzenstraße 40, 51063 Köln, Germany",
+    "lat": 50.969,
+    "lng": 7.0168,
+    "notes": "2028 Festivals + Headline Shows May - June - Lanxess Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "22-berlin-de-columbiahalle",
+    "order": 22,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Berlin, DE",
+    "countryCode": "Berlin, DE",
+    "venue": "Columbiahalle",
+    "address": "Columbiadamm 13-21, 10965 Berlin, Germany",
+    "lat": 52.4847661,
+    "lng": 13.3925181,
+    "notes": "2028 Festivals + Headline Shows May - June - The Uber Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "23-amsterdam-nl-afas-live",
+    "order": 23,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Amsterdam, NL",
+    "countryCode": "Amsterdam, NL",
+    "venue": "AFAS Live",
+    "address": "Johan Cruijff Boulevard 590, 1101 DS Amsterdam, Netherlands",
+    "lat": 52.3122606,
+    "lng": 4.9442166,
+    "notes": "2028 Festivals + Headline Shows May - June - Ziggodome",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "24-madrid-es-sala-la-riviera",
+    "order": 24,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Madrid, ES",
+    "countryCode": "Madrid, ES",
+    "venue": "Sala La Riviera",
+    "address": "P.º Bajo de la Virgen del Puerto, S/N, Arganzuela, 28005 Madrid, Spain",
+    "lat": 40.4168,
+    "lng": -3.7038,
+    "notes": "2028 Festivals + Headline Shows May - June - Movistar Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "25-barcelona-es-razzmatazz",
+    "order": 25,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Barcelona, ES",
+    "countryCode": "Barcelona, ES",
+    "venue": "Razzmatazz",
+    "address": "Carrer dels Almogàvers, 122, Sant Martí, 08018 Barcelona, Spain",
+    "lat": 41.397701,
+    "lng": 2.19098,
+    "notes": "2028 Festivals + Headline Shows May - June - Palau St Jordi",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "26-brussels-be-ancienne-belgique-x2-or-forest-national",
+    "order": 26,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Brussels, BE",
+    "countryCode": "Brussels, BE",
+    "venue": "Ancienne Belgique x2 or Forest National",
+    "address": "Bd Anspach 110, 1000 Bruxelles, Belgium / Av. Victor Rousseau 208, 1190 Forest, Belgium",
+    "lat": 50.8503,
+    "lng": 4.3517,
+    "notes": "2028 Festivals + Headline Shows May - June - Antwerps Sportpaleis or ING Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "27-stockholm-se-b-k",
+    "order": 27,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Stockholm, SE",
+    "countryCode": "Stockholm, SE",
+    "venue": "B-K",
+    "address": "Frihamnsgatan 14, 115 56 Stockholm, Sweden",
+    "lat": 59.3293,
+    "lng": 18.0686,
+    "notes": "2028 Festivals + Headline Shows May - June - Avicii Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "28-lisbon-pt-meo-arena-fka-sal-tejo",
+    "order": 28,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Lisbon, PT",
+    "countryCode": "Lisbon, PT",
+    "venue": "MEO Arena (FKA Sal Tejo)",
+    "address": "Rossio dos Olivais, 1990-231 Lisboa, Portugal",
+    "lat": 38.7223,
+    "lng": -9.1393,
+    "notes": "2028 Festivals + Headline Shows May - June - MEO Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "29-copenhagen-dk-kb-hallen",
+    "order": 29,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Copenhagen, DK",
+    "countryCode": "Copenhagen, DK",
+    "venue": "KB Hallen",
+    "address": "Peter Bangs Vej 147, 2000 Frederiksberg, Denmark",
+    "lat": 55.6761,
+    "lng": 12.5683,
+    "notes": "2028 Festivals + Headline Shows May - June - Royal Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "30-vienna-au-gasometer",
+    "order": 30,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Vienna, AU",
+    "countryCode": "Vienna, AU",
+    "venue": "Gasometer",
+    "address": "Guglgasse 6, 1110 Wien, Austria",
+    "lat": 48.2082,
+    "lng": 16.3738,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "31-zurich-se-halle-622-or-komplex-457",
+    "order": 31,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Zurich, SE",
+    "countryCode": "Zurich, SE",
+    "venue": "Halle 622 or Komplex 457",
+    "address": "Therese-Giehse-Strasse 10, 8050 Zürich, Switzerland /",
+    "lat": 47.3769,
+    "lng": 8.5417,
+    "notes": "2028 Festivals + Headline Shows May - June - Hallenstadoin",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "32-oslo-no-sentrum-scene",
+    "order": 32,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Oslo, NO",
+    "countryCode": "Oslo, NO",
+    "venue": "Sentrum Scene",
+    "address": "Arbeidersamfunnets Plass 1, 0181 Oslo, Norway",
+    "lat": 59.9139,
+    "lng": 10.7522,
+    "notes": "2028 Festivals + Headline Shows May - June - Oslo Spektrum",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "33-dublin-ie-olympia-theater",
+    "order": 33,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Dublin, IE",
+    "countryCode": "Dublin, IE",
+    "venue": "Olympia Theater",
+    "address": "3Olympia Theatre, 72 Dame St, Temple Bar, Dublin 2, D02 K135, Ireland",
+    "lat": 53.3498,
+    "lng": -6.2603,
+    "notes": "2028 Festivals + Headline Shows May - June - 3Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "34-hamburg-de-grosse-freiheit-36",
+    "order": 34,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Hamburg, DE",
+    "countryCode": "Hamburg, DE",
+    "venue": "Grosse Freiheit 36",
+    "address": "Große Freiheit 36, 22767 Hamburg, Germany",
+    "lat": 53.5511,
+    "lng": 9.9937,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "35-warsaw-pl-progresja",
+    "order": 35,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Warsaw, PL",
+    "countryCode": "Warsaw, PL",
+    "venue": "Progresja",
+    "address": "Fort Wola 22, 01-258 Warszawa, Poland",
+    "lat": 52.2297,
+    "lng": 21.0122,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "36-prague-cz-sasazu",
+    "order": 36,
+    "timeline": "2027 February - March Club Tour",
+    "region": "EU/UK",
+    "city": "Prague, CZ",
+    "countryCode": "Prague, CZ",
+    "venue": "SaSaZu",
+    "address": "306/13, Holešovice, Bubenské nábř., 170 00 Praha 7, Czechia",
+    "lat": 50.0755,
+    "lng": 14.4378,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "37-sao-paulo-br-komplexo-tempo",
+    "order": 37,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Sao Paulo, BR",
+    "countryCode": "Sao Paulo, BR",
+    "venue": "Komplexo Tempo",
+    "address": "Av. Henry Ford, 511 - Parque da Mooca, São Paulo - SP, 03109-001, Brazil",
+    "lat": -23.5767125,
+    "lng": -46.5975118,
+    "notes": "2028 March - April Festival Run - Lollapalooza\n2029 Arena Tour - Sao Paulo Arena or Special show at Pacaembu Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "38-buenos-aires-ar-punta-carrasco-art-park",
+    "order": 38,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Buenos Aires, AR",
+    "countryCode": "Buenos Aires, AR",
+    "venue": "Punta Carrasco (Art Park)",
+    "address": "Acceso Punta Carrasco, C1425 Cdad. Autónoma de Buenos Aires, Argentina",
+    "lat": -34.6037,
+    "lng": -58.3816,
+    "notes": "2028 March - April Festival Run - Lollapalooza\n2029 Arena Tour - Movistar Arena or Universtiy of BA outdoor park",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "39-santiago-cl-espacio-riesco",
+    "order": 39,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Santiago, CL",
+    "countryCode": "Santiago, CL",
+    "venue": "Espacio Riesco",
+    "address": "Av. El Salto 5000, 8580668 Huechuraba, Región Metropolitana, Chile",
+    "lat": -33.38438,
+    "lng": -70.62264,
+    "notes": "2028 March - April Festival Run - Lollapalooza\n2029 Arena Tour - Movistar Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "40-bogota-cl-royal-center-or-chamorro-city-hall",
+    "order": 40,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Bogota, CL",
+    "countryCode": "Bogota, CL",
+    "venue": "Royal Center or Chamorro City Hall",
+    "address": "Auto. Norte #153-81, Suba, Bogotá, Colombia",
+    "lat": 4.711,
+    "lng": -74.0721,
+    "notes": "2028 March - April Festival Run - Estereo Picnic\n2029 Arena Tour - Movistar Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "41-medellin-cl-skycenter-center-or-chamorro-city-hall",
+    "order": 41,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Medellin, CL",
+    "countryCode": "Medellin, CL",
+    "venue": "Skycenter Center or Chamorro City Hall",
+    "address": "Cl. 85 #48 – 01, Itagüi, Antioquia, Colombia / Auto. Norte #153-81, Suba, Bogotá, Colombia",
+    "lat": 6.2442,
+    "lng": -75.5812,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "42-mexico-city-mx-pepsi-center-wtc",
+    "order": 42,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Mexico City, MX",
+    "countryCode": "Mexico City, MX",
+    "venue": "Pepsi Center WTC",
+    "address": "Dakota s/n, Nápoles, Benito Juárez, 03810 Ciudad de México, CDMX, Mexico",
+    "lat": 19.39444,
+    "lng": -99.17455,
+    "notes": "2028 March - April Festival Run - Pa'l Norte (festival)\n2029 Arena Tour - Arena CDMX\n2029 Arena Tour - Arena Monterrey",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "43-guadalajara-mx-teatro-estudio-cavaret",
+    "order": 43,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Guadalajara, MX",
+    "countryCode": "Guadalajara, MX",
+    "venue": "Teatro Estudio Cavaret",
+    "address": "Ave. Parres Arias y Periferico Nucleo Calle 2, Industrial los Belenes, 45157 Zapopan, Jal., Mexico",
+    "lat": 20.67738,
+    "lng": -103.34749,
+    "notes": "2029 Arena Tour - Auditorio Telmex",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "44-san-juan-pr-coca-cola-music-hall",
+    "order": 44,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "San Juan, PR",
+    "countryCode": "San Juan, PR",
+    "venue": "Coca-Cola Music Hall",
+    "address": "250 Convention Blvd, San Juan, 00907, Puerto Rico",
+    "lat": 18.4556,
+    "lng": -66.0921,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "45-lima-pu-experts-only",
+    "order": 45,
+    "timeline": "2027 May Club Tour",
+    "region": "LATAM",
+    "city": "Lima, PU",
+    "countryCode": "Lima, PU",
+    "venue": "Experts Only",
+    "address": "",
+    "lat": -12.0464,
+    "lng": -77.0428,
+    "notes": "2028 March - April Festival Run - Experts Only",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "46-manilla-ph-new-frontier-theater",
+    "order": 46,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Manilla, PH",
+    "countryCode": "Manilla, PH",
+    "venue": "New Frontier Theater",
+    "address": "7 General Malvar Ave, Cubao, Quezon City, 1109 Metro Manila, Philippines",
+    "lat": 14.5995,
+    "lng": 120.9842,
+    "notes": "2028 November Ballrooms & Arena Tour - Mall of Asia Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "47-bangkok-th-uob-live",
+    "order": 47,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Bangkok, TH",
+    "countryCode": "Bangkok, TH",
+    "venue": "UOB LIVE",
+    "address": "Floor 6, EmSphere, 622 Sukhumvit Rd, Klongton, Khlong Toei, Bangkok, Thailand",
+    "lat": 13.7563,
+    "lng": 100.5018,
+    "notes": "2028 November Ballrooms & Arena Tour - Impact Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "48-tokyo-jp-toyosu-pit",
+    "order": 48,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Tokyo, JP",
+    "countryCode": "Tokyo, JP",
+    "venue": "Toyosu Pit",
+    "address": "6 Chome-1-23 Toyosu, Koto City, Tokyo 135-0061, Japan",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "notes": "2028 November Ballrooms & Arena Tour - Budokan Tokyo",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "49-osaka-jp-namba-hatch",
+    "order": 49,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Osaka, JP",
+    "countryCode": "Osaka, JP",
+    "venue": "Namba Hatch",
+    "address": "1 Chome-3-1 Minatomachi, Naniwa Ward, Osaka, 556-0017, Japan",
+    "lat": 34.6937,
+    "lng": 135.5023,
+    "notes": "",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "50-hong-kong-cn-macpherson-stadium",
+    "order": 50,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Hong Kong, CN",
+    "countryCode": "Hong Kong, CN",
+    "venue": "MacPherson Stadium",
+    "address": "38號 Nelson St, Mong Kok, Hong Kong",
+    "lat": 22.3193,
+    "lng": 114.1694,
+    "notes": "2028 November Ballrooms & Arena Tour - Asia World Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "51-seoul-kr-myunghwa-live",
+    "order": 51,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Seoul, KR",
+    "countryCode": "Seoul, KR",
+    "venue": "Myunghwa Live",
+    "address": "30 Beodeunaru-ro, Yeongdeungpo District, Seoul, South Korea",
+    "lat": 37.5665,
+    "lng": 126.978,
+    "notes": "2028 November Ballrooms & Arena Tour - KSPO Dome",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "52-singapore-sg-gardens-by-the-bay",
+    "order": 52,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Singapore, SG",
+    "countryCode": "Singapore, SG",
+    "venue": "Gardens by the Bay",
+    "address": "8 Marina Gardens Dr, Singapore 018951",
+    "lat": 1.3521,
+    "lng": 103.8198,
+    "notes": "2028 November Ballrooms & Arena Tour - Singapore Indoor Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "53-taipei-tw-zepp-or-ticc",
+    "order": 53,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Taipei, TW",
+    "countryCode": "Taipei, TW",
+    "venue": "Zepp or TICC",
+    "address": "242, Taiwan, New Taipei City, Xinzhuang District, Section 4, New Taipei Blvd, 3號8樓",
+    "lat": 25.033,
+    "lng": 121.5654,
+    "notes": "2028 November Ballrooms & Arena Tour - Kaohsiung Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "54-kuala-lumpur-my-starxpo-centre-or-megastar-arena",
+    "order": 54,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Kuala Lumpur, MY",
+    "countryCode": "Kuala Lumpur, MY",
+    "venue": "Starxpo Centre or Megastar Arena",
+    "address": "2, Jalan Gelugor, Pudu, 55200 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur, Malaysia / 1F, Mega star arena, kl @ Sg wang plaza, 3, Jalan Bulan 2, Bukit Bintang, 55100 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia",
+    "lat": 3.139,
+    "lng": 101.6869,
+    "notes": "2028 November Ballrooms & Arena Tour - Axiata Arena",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  },
+  {
+    "id": "55-jakarta-id-indonesia-convention-exhibition",
+    "order": 55,
+    "timeline": "2027 June - July Clubs & Ballrooms Tour",
+    "region": "APAC",
+    "city": "Jakarta, ID",
+    "countryCode": "Jakarta, ID",
+    "venue": "Indonesia Convention Exhibition",
+    "address": "Jl. BSD Grand Boulevard No.1, Pagedangan, Kec. Pagedangan, Kabupaten Tangerang, Banten 15339, Indonesia",
+    "lat": -6.2088,
+    "lng": 106.8456,
+    "notes": "2028 November Ballrooms & Arena Tour - Beach City Intl Stadium",
+    "bullets": {
+      "base": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      },
+      "upside": {
+        "ticketPrice": "TBD",
+        "gross": "TBD",
+        "netOrGuarantee": "TBD",
+        "notes": "TBD"
+      }
+    }
+  }
+]

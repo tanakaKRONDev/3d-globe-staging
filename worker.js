@@ -1,0 +1,57 @@
+/**
+ * Password gate for the 3D Globe landing page.
+ * Uses HTTP Basic Auth at the Worker level.
+ * Password must be set via Cloudflare secret: SITE_PASSWORD
+ */
+
+const encoder = new TextEncoder()
+
+function timingSafeEqual(a, b) {
+  const aBytes = encoder.encode(a)
+  const bBytes = encoder.encode(b)
+  if (aBytes.byteLength !== bBytes.byteLength) {
+    return !crypto.subtle.timingSafeEqual(aBytes, aBytes)
+  }
+  return crypto.subtle.timingSafeEqual(aBytes, bBytes)
+}
+
+function unauthorized() {
+  return new Response('Unauthorized', {
+    status: 401,
+    headers: { 'WWW-Authenticate': 'Basic realm="Internal"' },
+  })
+}
+
+export default {
+  async fetch(request, env) {
+    const PASS = env.SITE_PASSWORD
+    if (!PASS) {
+      return new Response('Site password not configured. Set SITE_PASSWORD secret.', { status: 500 })
+    }
+
+    const url = new URL(request.url)
+    if (url.pathname === '/health') {
+      return new Response('OK', { status: 200 })
+    }
+
+    const auth = request.headers.get('Authorization')
+    if (!auth || !auth.startsWith('Basic ')) {
+      return unauthorized()
+    }
+
+    try {
+      const encoded = auth.slice(6)
+      const decoded = atob(encoded)
+      const colonIndex = decoded.indexOf(':')
+      if (colonIndex === -1) return unauthorized()
+      const pass = decoded.slice(colonIndex + 1)
+      if (!timingSafeEqual(pass, PASS)) {
+        return unauthorized()
+      }
+    } catch {
+      return unauthorized()
+    }
+
+    return env.ASSETS.fetch(request)
+  },
+}

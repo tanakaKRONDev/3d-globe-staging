@@ -1,0 +1,53 @@
+{
+  "name": "3d-globe-landing-page",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node scripts/create-placeholder-textures.mjs && node scripts/prebuild.mjs",
+    "build": "node scripts/check-textures.mjs && vite build",
+    "postbuild": "node scripts/verify-dist-data.mjs",
+    "preview": "vite preview",
+    "deploy": "npm run build && npx wrangler deploy --assets=./dist",
+    "deploy:vercel": "npm run build && npx vercel --prod",
+    "data:raw": "tsx scripts/generate-stops.ts",
+    "data:coords": "tsx scripts/enrich-coordinates.ts",
+    "data:stops": "npm run data:all",
+    "data:all": "tsx scripts/generate-stops.ts",
+    "data:buildings:v1": "tsx scripts/fetch-buildings.ts",
+    "buildings:audit": "tsx scripts/audit-buildings.ts",
+    "buildings:rebuild:mismatch": "tsx scripts/fetch-buildings.ts --orders-file public/data/buildings/_mismatched_orders.json --force --strict --between-ms 4000",
+    "buildings:verify": "tsx scripts/verify-buildings.ts",
+    "buildings:refresh": "tsx scripts/fetch-buildings.ts --strict",
+    "buildings:refresh:retry": "tsx scripts/fetch-buildings.ts --strict",
+    "buildings:clean": "node scripts/clean-buildings.mjs",
+    "buildings:rebuild": "tsx scripts/fetch-buildings.ts --wipe --force --only-missing false --strict --between-ms 2000",
+    "buildings:rebuild:batch1": "tsx scripts/fetch-buildings.ts --wipe --force --only-missing false --strict --between-ms 2500 --from 1 --to 12",
+    "buildings:rebuild:batch2": "tsx scripts/fetch-buildings.ts --force --only-missing false --strict --between-ms 2500 --from 13 --to 24",
+    "buildings:rebuild:batch3": "tsx scripts/fetch-buildings.ts --force --only-missing false --strict --between-ms 2500 --from 25 --to 55",
+    "buildings:rebuild:missing": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3000",
+    "buildings:retry:la": "tsx scripts/fetch-buildings.ts --only-missing true --refetch-invalid true --strict --between-ms 3500 --from 12 --to 12"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.13",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.2.10",
+    "@types/node": "^25.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "cesium": "^1.138.0",
+    "lucide-react": "^0.575.0",
+    "node-fetch": "^3.3.2",
+    "osmtogeojson": "^3.0.0-beta.5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "vite-plugin-static-copy": "^3.2.0",
+    "xlsx": "^0.18.5"
+  }
+}
