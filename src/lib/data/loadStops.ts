@@ -1,8 +1,37 @@
 import type { Stop } from './types'
 
+const TBD_BULLETS = {
+  base: { ticketPrice: 'TBD', gross: 'TBD', netOrGuarantee: 'TBD', notes: 'TBD' },
+  upside: { ticketPrice: 'TBD', gross: 'TBD', netOrGuarantee: 'TBD', notes: 'TBD' },
+} as const
+
+/** Normalize API or JSON stop into Stop shape (countryCode, bullets, etc.). */
+function normalizeStop(raw: Record<string, unknown>): Stop {
+  const country = (raw.country ?? raw.countryCode ?? '') as string
+  return {
+    id: String(raw.id ?? ''),
+    order: typeof raw.order === 'number' ? raw.order : Number(raw.stop_order) || 0,
+    city: String(raw.city ?? ''),
+    countryCode: country,
+    venue: String(raw.venue ?? ''),
+    timeline: raw.timeline != null ? String(raw.timeline) : undefined,
+    region: raw.region != null ? String(raw.region) : undefined,
+    address: raw.address != null ? String(raw.address) : undefined,
+    notes: raw.notes != null ? String(raw.notes) : undefined,
+    lat: raw.lat != null && Number.isFinite(Number(raw.lat)) ? Number(raw.lat) : null,
+    lng: raw.lng != null && Number.isFinite(Number(raw.lng)) ? Number(raw.lng) : null,
+    capacityMin: raw.capacityMin != null ? Number(raw.capacityMin) : undefined,
+    capacityMax: raw.capacityMax != null ? Number(raw.capacityMax) : undefined,
+    bullets: (raw.bullets as Stop['bullets']) ?? TBD_BULLETS,
+  }
+}
+
 export async function loadStops(): Promise<Stop[]> {
   try {
-    let response = await fetch('/data/stops.all.json')
+    let response = await fetch('/api/stops')
+    if (!response.ok) {
+      response = await fetch('/data/stops.all.json')
+    }
     if (!response.ok) {
       response = await fetch('/data/stops.json')
     }
@@ -12,11 +41,9 @@ export async function loadStops(): Promise<Stop[]> {
       )
     }
 
-    const stops: Stop[] = await response.json()
-
-    if (!Array.isArray(stops)) {
-      throw new Error('Invalid stops data: expected array')
-    }
+    const raw = (await response.json()) as unknown
+    const arr = Array.isArray(raw) ? raw : []
+    const stops = arr.map((row) => normalizeStop(row as Record<string, unknown>))
 
     const seenOrders = new Set<number>()
     stops.forEach((stop, index) => {
