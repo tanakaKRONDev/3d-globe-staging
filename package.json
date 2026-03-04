@@ -48,6 +48,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "cesium": "^1.138.0",
+    "i18n-iso-countries": "^7.14.0",
     "lucide-react": "^0.575.0",
     "node-fetch": "^3.3.2",
     "osmtogeojson": "^3.0.0-beta.5",

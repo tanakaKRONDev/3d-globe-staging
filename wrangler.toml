@@ -39,6 +39,16 @@ cwd = "."
 # -------------------------
 # Asset rules (optional)
 # -------------------------
+# -------------------------
+# KV (optional) for geocode cache - add binding "GEOCACHE"
+# Create: npx wrangler kv namespace create GEOCACHE
+# [[kv_namespaces]]
+# binding = "GEOCACHE"
+# id = "YOUR_GEOCACHE_ID"
+
+# -------------------------
+# Asset rules
+# -------------------------
 [[rules]]
 type = "Text"
 globs = ["**/*.html", "**/*.txt"]

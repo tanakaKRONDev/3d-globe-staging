@@ -1,13 +1,16 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2, ArrowLeft } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { AuthShell } from '../components/auth/AuthShell'
 import { AuthCard } from '../components/auth/AuthCard'
+import { AddressAutocomplete } from '../components/admin/AddressAutocomplete'
+import { CountryComboBox } from '../components/admin/CountryComboBox'
+import { getCountryName, normalizeCountry } from '../lib/geo/countries'
 import './AdminPage.css'
 
-/** Stop shape returned by GET /api/admin/stops and used in POST/PUT */
+/** Stop shape: country holds ISO2 code (e.g. US, GB). */
 export interface AdminStop {
   id: string
   order: number
@@ -43,6 +46,12 @@ export function AdminPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [geoCandidates, setGeoCandidates] = useState<
+    Array<{ displayName: string; lat: number; lng: number; city?: string; state?: string; postcode?: string; countryCode?: string }>
+  >([])
+  const [geoError, setGeoError] = useState<string | null>(null)
+  const [isGeoLoading, setIsGeoLoading] = useState(false)
+  const autoFillRef = useRef(false)
 
   const fetchStops = useCallback(async () => {
     setLoadError(null)
@@ -59,7 +68,11 @@ export function AdminPage() {
       return
     }
     const data = (await res.json()) as AdminStop[]
-    setStops(Array.isArray(data) ? data : [])
+    const normalized = (Array.isArray(data) ? data : []).map((s) => ({
+      ...s,
+      country: normalizeCountry(s.country || ''),
+    }))
+    setStops(normalized)
     setAuthenticated(true)
     setAuthChecked(true)
   }, [])
@@ -118,7 +131,8 @@ export function AdminPage() {
 
   const selectStop = (stop: AdminStop) => {
     setEditingNew(false)
-    setSelectedStop({ ...stop })
+    const country = stop.country?.trim().length ? (normalizeCountry(stop.country) || '') : (stop.country ?? '')
+    setSelectedStop({ ...stop, country })
     setSaveError(null)
   }
 
@@ -128,20 +142,110 @@ export function AdminPage() {
     setSaveError(null)
   }
 
+  const resolveForSave = useCallback(async (): Promise<{ address: string; lat: number; lng: number; city: string; country: string } | null> => {
+    if (!selectedStop) return null
+    const addr = selectedStop.address?.trim() || ''
+    const latOk = Number.isFinite(selectedStop.lat) && selectedStop.lat !== 0
+    const lngOk = Number.isFinite(selectedStop.lng) && selectedStop.lng !== 0
+
+    if (addr && (!latOk || !lngOk)) {
+      const params = new URLSearchParams({ q: addr, limit: '6' })
+      if (selectedStop.country) params.set('country', selectedStop.country)
+      const res = await adminFetch(`/geocode?${params}`)
+      const data = (await res.json()) as GeoResult[]
+      const results = Array.isArray(data) ? data : []
+      if (res.status === 429) {
+        setSaveError('Rate limited. Please wait a moment.')
+        return null
+      }
+      if (results.length === 1) {
+        const r = results[0]
+        return {
+          address: selectedStop.address || '',
+          lat: r.lat,
+          lng: r.lng,
+          city: selectedStop.city || r.address?.city || '',
+          country: selectedStop.country || (r.address?.countryCode || '').toUpperCase(),
+        }
+      }
+      if (results.length > 1) {
+        setGeoCandidates(
+          results.map((r) => ({
+            displayName: r.displayName,
+            lat: r.lat,
+            lng: r.lng,
+            city: r.address?.city,
+            state: r.address?.state,
+            postcode: r.address?.postcode,
+            countryCode: r.address?.countryCode,
+          }))
+        )
+        setSaveError('Multiple matches. Select an address from the dropdown.')
+        return null
+      }
+      setSaveError('No match found. Enter coordinates manually.')
+      return null
+    }
+
+    if ((latOk && lngOk) && !addr) {
+      const res = await adminFetch(`/reverse?lat=${selectedStop.lat}&lng=${selectedStop.lng}`)
+      const data = (await res.json()) as GeoResult | GeoResult[]
+      const arr = Array.isArray(data) ? data : [data]
+      const r = arr[0]
+      if (res.status === 429) {
+        setSaveError('Rate limited. Please wait a moment.')
+        return null
+      }
+      if (r) {
+        return {
+          address: r.displayName,
+          lat: selectedStop.lat,
+          lng: selectedStop.lng,
+          city: selectedStop.city || r.address?.city || '',
+          country: selectedStop.country || (r.address?.countryCode || '').toUpperCase(),
+        }
+      }
+      setSaveError('Could not reverse geocode. Enter address manually.')
+      return null
+    }
+
+    return {
+      address: selectedStop.address || '',
+      lat: selectedStop.lat,
+      lng: selectedStop.lng,
+      city: selectedStop.city || '',
+      country: selectedStop.country.trim(),
+    }
+  }, [selectedStop])
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedStop) return
     setSaveError(null)
+    setGeoCandidates([])
+    setGeoError(null)
     setSaving(true)
     try {
+      const resolved = await resolveForSave()
+      if (!resolved) {
+        setSaving(false)
+        return
+      }
+      const { address, lat, lng, city, country } = resolved
+      const hasCoords = Number.isFinite(lat) && lat !== 0 && Number.isFinite(lng) && lng !== 0
+      if (!address?.trim() || !hasCoords) {
+        setSaveError('Address and coordinates are both required. Use auto-fill or enter manually.')
+        setSaving(false)
+        return
+      }
       const body = {
         order: selectedStop.order,
-        city: selectedStop.city,
-        country: selectedStop.country,
+        city: city || selectedStop.city,
+        country: country || selectedStop.country.trim(),
         venue: selectedStop.venue,
-        address: selectedStop.address,
-        lat: selectedStop.lat,
-        lng: selectedStop.lng,
+        address,
+        lat,
+        lng,
         timeline: selectedStop.timeline ?? '',
         notes: selectedStop.notes ?? '',
       }
@@ -211,6 +315,143 @@ export function AdminPage() {
   const updateField = <K extends keyof AdminStop>(key: K, value: AdminStop[K]) => {
     if (selectedStop) setSelectedStop({ ...selectedStop, [key]: value })
   }
+
+  interface GeoResult {
+    displayName: string
+    lat: number
+    lng: number
+    address?: { city?: string; state?: string; postcode?: string; countryCode?: string }
+  }
+
+  const fillFromGeoResult = useCallback(
+    (r: GeoResult) => {
+      if (!selectedStop) return
+      autoFillRef.current = true
+      const s = { ...selectedStop }
+      s.lat = r.lat
+      s.lng = r.lng
+      if (!s.city?.trim() && r.address?.city) s.city = r.address.city
+      if (!s.country?.trim() && r.address?.countryCode) s.country = (r.address.countryCode || '').toUpperCase()
+      setSelectedStop(s)
+      setGeoCandidates([])
+      setGeoError(null)
+      queueMicrotask(() => {
+        autoFillRef.current = false
+      })
+    },
+    [selectedStop]
+  )
+
+  const fillFromReverseResult = useCallback(
+    (r: GeoResult) => {
+      if (!selectedStop) return
+      autoFillRef.current = true
+      const s = { ...selectedStop }
+      s.address = r.displayName
+      if (!s.city?.trim() && r.address?.city) s.city = r.address.city
+      if (!s.country?.trim() && r.address?.countryCode) s.country = (r.address.countryCode || '').toUpperCase()
+      setSelectedStop(s)
+      setGeoError(null)
+      queueMicrotask(() => {
+        autoFillRef.current = false
+      })
+    },
+    [selectedStop]
+  )
+
+  const runGeocode = useCallback(async () => {
+    if (!selectedStop) return
+    const addr = selectedStop.address?.trim() || ''
+    const latOk = Number.isFinite(selectedStop.lat) && selectedStop.lat !== 0
+    const lngOk = Number.isFinite(selectedStop.lng) && selectedStop.lng !== 0
+    if (!addr || (latOk && lngOk)) return
+
+    setGeoError(null)
+    setGeoCandidates([])
+    setIsGeoLoading(true)
+    try {
+      const params = new URLSearchParams({ q: addr, limit: '6' })
+      if (selectedStop.country) params.set('country', selectedStop.country)
+      const res = await adminFetch(`/geocode?${params}`)
+      const data = (await res.json()) as GeoResult[]
+      const results = Array.isArray(data) ? data : []
+
+      if (res.status === 429) {
+        setGeoError('Rate limited. Please wait a moment.')
+        return
+      }
+      if (!res.ok) {
+        setGeoError('Geocoding failed')
+        return
+      }
+
+      if (results.length === 1) {
+        fillFromGeoResult(results[0])
+      } else if (results.length > 1) {
+        setGeoCandidates(
+          results.map((r) => ({
+            displayName: r.displayName,
+            lat: r.lat,
+            lng: r.lng,
+            city: r.address?.city,
+            state: r.address?.state,
+            postcode: r.address?.postcode,
+            countryCode: r.address?.countryCode,
+          }))
+        )
+      } else {
+        setGeoError('No match found. Enter coordinates manually.')
+      }
+    } catch {
+      setGeoError('Geocoding failed')
+    } finally {
+      setIsGeoLoading(false)
+    }
+  }, [selectedStop, fillFromGeoResult])
+
+  const runReverse = useCallback(async () => {
+    if (!selectedStop) return
+    const addr = selectedStop.address?.trim() || ''
+    const lat = selectedStop.lat
+    const lng = selectedStop.lng
+    const latOk = Number.isFinite(lat) && lat !== 0
+    const lngOk = Number.isFinite(lng) && lng !== 0
+    if (!latOk || !lngOk || addr) return
+
+    setGeoError(null)
+    setIsGeoLoading(true)
+    try {
+      const res = await adminFetch(`/reverse?lat=${lat}&lng=${lng}`)
+      const data = (await res.json()) as GeoResult | GeoResult[]
+      const arr = Array.isArray(data) ? data : [data]
+      const r = arr[0]
+
+      if (res.status === 429) {
+        setGeoError('Rate limited. Please wait a moment.')
+        return
+      }
+      if (!res.ok) {
+        setGeoError('Reverse geocoding failed')
+        return
+      }
+
+      if (r) fillFromReverseResult(r)
+    } catch {
+      setGeoError('Reverse geocoding failed')
+    } finally {
+      setIsGeoLoading(false)
+    }
+  }, [selectedStop, fillFromReverseResult])
+
+  const handleAddressBlur = useCallback(() => {
+    if (autoFillRef.current) return
+    runGeocode()
+  }, [runGeocode])
+
+  const handleCoordsBlur = useCallback(() => {
+    if (autoFillRef.current) return
+    runReverse()
+  }, [runReverse])
 
   if (!authChecked) {
     return (
@@ -294,7 +535,7 @@ export function AdminPage() {
                   >
                     <td>{stop.order}</td>
                     <td>{stop.city}</td>
-                    <td>{stop.country}</td>
+                    <td>{getCountryName(stop.country) || stop.country}</td>
                     <td>{stop.venue}</td>
                     <td className="admin-page__cell-address">{stop.address}</td>
                   </tr>
@@ -343,11 +584,10 @@ export function AdminPage() {
                 </label>
                 <label className="admin-page__label">
                   Country
-                  <input
-                    type="text"
+                  <CountryComboBox
                     value={selectedStop.country}
-                    onChange={(e) => updateField('country', e.target.value)}
-                    className="admin-page__input"
+                    onChange={(code) => updateField('country', code)}
+                    placeholder="Search or select country…"
                   />
                 </label>
                 <label className="admin-page__label span2">
@@ -359,34 +599,101 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
+                <AddressAutocomplete
+                  countryCode={selectedStop.country}
+                  city={selectedStop.city}
+                  onPick={(pick) => {
+                    updateField('address', pick.displayName)
+                    updateField('city', pick.city || selectedStop.city)
+                    updateField('country', pick.countryCode || selectedStop.country)
+                    updateField('lat', pick.lat)
+                    updateField('lng', pick.lng)
+                  }}
+                />
                 <label className="admin-page__label span2">
-                  Address
+                  <span className="admin-page__label-row">
+                    Address
+                    <button
+                      type="button"
+                      onClick={runGeocode}
+                      disabled={isGeoLoading || !selectedStop.address?.trim()}
+                      className="admin-page__inline-btn"
+                      title="Auto-fill coordinates from address"
+                    >
+                      Auto-fill coords
+                    </button>
+                  </span>
                   <input
                     type="text"
                     value={selectedStop.address}
                     onChange={(e) => updateField('address', e.target.value)}
+                    onBlur={handleAddressBlur}
                     className="admin-page__input"
                   />
+                  {geoCandidates.length > 1 && (
+                    <div className="admin-page__geo-dropdown">
+                      <p className="admin-page__geo-dropdown-label">Select address match…</p>
+                      {geoCandidates.map((c, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="admin-page__geo-dropdown-item"
+                          onClick={() => {
+                            fillFromGeoResult({
+                              displayName: c.displayName,
+                              lat: c.lat,
+                              lng: c.lng,
+                              address: { city: c.city, postcode: c.postcode, countryCode: c.countryCode },
+                            })
+                          }}
+                        >
+                          {c.displayName}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {geoError && <p className="admin-page__geo-msg">{geoError}</p>}
                 </label>
-                <label className="admin-page__label">
-                  Lat
-                  <input
+                <label className="admin-page__label admin-page__label--coords">
+                  <span className="admin-page__label-row">
+                    Lat / Lng
+                    <button
+                      type="button"
+                      onClick={runReverse}
+                      disabled={
+                        isGeoLoading ||
+                        !Number.isFinite(selectedStop.lat) ||
+                        selectedStop.lat === 0 ||
+                        !Number.isFinite(selectedStop.lng) ||
+                        selectedStop.lng === 0 ||
+                        !!selectedStop.address?.trim()
+                      }
+                      className="admin-page__inline-btn"
+                      title="Auto-fill address from coordinates"
+                    >
+                      Auto-fill address
+                    </button>
+                  </span>
+                  <div className="admin-page__coords-row">
+                    <input
                     type="number"
                     step="any"
                     value={selectedStop.lat}
                     onChange={(e) => updateField('lat', parseFloat(e.target.value) || 0)}
+                    onBlur={handleCoordsBlur}
                     className="admin-page__input"
+                    placeholder="Lat"
                   />
-                </label>
-                <label className="admin-page__label">
-                  Lng
-                  <input
-                    type="number"
-                    step="any"
-                    value={selectedStop.lng}
-                    onChange={(e) => updateField('lng', parseFloat(e.target.value) || 0)}
-                    className="admin-page__input"
-                  />
+                    <input
+                      type="number"
+                      step="any"
+                      value={selectedStop.lng}
+                      onChange={(e) => updateField('lng', parseFloat(e.target.value) || 0)}
+                      onBlur={handleCoordsBlur}
+                      className="admin-page__input"
+                      placeholder="Lng"
+                    />
+                  </div>
                 </label>
                 <label className="admin-page__label span2">
                   Timeline

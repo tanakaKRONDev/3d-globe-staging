@@ -161,6 +161,15 @@
   outline: none;
 }
 
+.admin-page__select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: 2rem;
+}
+
 .admin-page__input::placeholder {
   color: var(--text-muted);
 }
@@ -365,9 +374,173 @@
   grid-column: 1 / -1;
 }
 
+/* Address autocomplete dropdown */
+.address-autocomplete {
+  position: relative;
+}
+
+.address-autocomplete__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+}
+
+.address-autocomplete__item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.address-autocomplete__item:hover {
+  background: var(--panel-hover);
+}
+
+.address-autocomplete__item--muted,
+.address-autocomplete__item--error {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.address-autocomplete__item--error {
+  color: rgba(239, 68, 68, 0.95);
+}
+
 @media (max-width: 640px) {
   .adminFormGrid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
+}
+
+/* Geo autofill UI */
+.admin-page__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.admin-page__inline-btn {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.admin-page__inline-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-muted);
+}
+
+.admin-page__inline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-page__label--coords .admin-page__coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.admin-page__geo-dropdown {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.admin-page__geo-dropdown-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.admin-page__geo-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.admin-page__geo-dropdown-item:hover {
+  background: var(--panel-hover);
+}
+
+.admin-page__geo-msg {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: var(--space-2) 0 0 0;
+}
+
+/* Country combo */
+.country-combobox {
+  position: relative;
+}
+
+.country-combobox__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+}
+
+.country-combobox__item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.country-combobox__item:hover,
+.country-combobox__item--highlight {
+  background: var(--panel-hover);
+}
+
+.country-combobox__item--muted {
+  color: var(--text-muted);
+  cursor: default;
 }

@@ -278,10 +278,14 @@ function validateStopPayload(body, isUpdate) {
   const timeline = body.timeline != null ? String(body.timeline) : null
   const notes = body.notes != null ? String(body.notes) : null
   const city = body.city != null ? String(body.city).trim() : ''
-  const country = body.country != null ? String(body.country).trim() : ''
+  const countryRaw = body.country != null ? String(body.country).trim() : ''
+  const country = countryRaw.toUpperCase()
   const venue = body.venue != null ? String(body.venue).trim() : ''
   if (!city) return { ok: false, status: 400, error: 'city is required' }
   if (!country) return { ok: false, status: 400, error: 'country is required' }
+  if (country.length !== 2) {
+    return { ok: false, status: 400, error: 'country must be a 2-letter ISO code (e.g. US, GB)' }
+  }
   if (!venue) return { ok: false, status: 400, error: 'venue is required' }
   if (!isUpdate) {
     const id = body.id != null ? String(body.id).trim() : ''
@@ -384,6 +388,167 @@ export default {
       const cookie = getAdminSessionCookie(request)
       if (!cookie || !(await verifyAdminToken(env, cookie))) {
         return adminUnauthorized()
+      }
+
+      // --- Admin geocode (Nominatim proxy) ---
+      const NOMINATIM_USER_AGENT = 'WorldTourAdmin/1.0 (https://github.com/your-org/3d-globe-landing-page)'
+      const GEO_RATE_MS = 1000
+      const GEO_CACHE_TTL = 600 // 10 min
+
+      const geocodeRateMap = new Map()
+      const geocodeMemCache = new Map()
+
+      function getGeocodeRateKey(request, endpoint) {
+        const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+        return `${ip}:${endpoint}`
+      }
+
+      function checkGeocodeRateLimit(key) {
+        const last = geocodeRateMap.get(key)
+        const now = Date.now()
+        if (last != null && now - last < GEO_RATE_MS) return false
+        geocodeRateMap.set(key, now)
+        return true
+      }
+
+      async function getGeocodeCache(env, key) {
+        if (env.GEOCACHE) {
+          try {
+            return await env.GEOCACHE.get(key)
+          } catch {
+            return null
+          }
+        }
+        const entry = geocodeMemCache.get(key)
+        if (!entry) return null
+        if (entry.exp < Date.now() / 1000) {
+          geocodeMemCache.delete(key)
+          return null
+        }
+        return entry.val
+      }
+
+      async function setGeocodeCache(env, key, value, ttlSec) {
+        const exp = Math.floor(Date.now() / 1000) + ttlSec
+        if (env.GEOCACHE) {
+          try {
+            await env.GEOCACHE.put(key, value, { expirationTtl: ttlSec })
+          } catch {}
+          return
+        }
+        geocodeMemCache.set(key, { val: value, exp })
+      }
+
+      function normalizeResult(item) {
+        const addr = item.address || {}
+        return {
+          displayName: item.display_name || '',
+          lat: parseFloat(item.lat) || 0,
+          lng: parseFloat(item.lon) || 0,
+          address: {
+            city: addr.city || addr.town || addr.village || addr.municipality || '',
+            state: addr.state || addr.county || '',
+            postcode: addr.postcode || '',
+            countryCode: (addr.country_code || '').toUpperCase(),
+          },
+          raw: item,
+        }
+      }
+
+      const origin = url.origin
+      const nominatimHeaders = {
+        'User-Agent': NOMINATIM_USER_AGENT,
+        Referer: origin || 'https://example.com',
+      }
+
+      if (url.pathname === '/api/admin/geocode' && request.method === 'GET') {
+        const rk = getGeocodeRateKey(request, 'geocode')
+        if (!checkGeocodeRateLimit(rk)) {
+          return jsonResponse({ error: 'rate_limited' }, 429)
+        }
+        const q = url.searchParams.get('q') || ''
+        const country = (url.searchParams.get('country') || '').toLowerCase()
+        const limit = Math.min(6, Math.max(1, parseInt(url.searchParams.get('limit'), 10) || 6))
+        if (!q.trim()) {
+          return jsonResponse({ error: 'Query parameter q is required' }, 400)
+        }
+        const cacheKey = `geo:${country}:${encodeURIComponent(q.trim())}:${limit}`
+        const cached = await getGeocodeCache(env, cacheKey)
+        if (cached) {
+          return new Response(cached, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+          })
+        }
+        const params = new URLSearchParams({
+          format: 'jsonv2',
+          addressdetails: '1',
+          limit: String(limit),
+          q: q.trim(),
+        })
+        if (country) params.set('countrycodes', country)
+        const nomUrl = `https://nominatim.openstreetmap.org/search?${params}`
+        try {
+          const res = await fetch(nomUrl, { headers: nominatimHeaders })
+          if (!res.ok) {
+            return jsonResponse({ error: 'Geocoding service unavailable' }, 502)
+          }
+          const data = await res.json()
+          const results = Array.isArray(data) ? data.map(normalizeResult) : []
+          const body = JSON.stringify(results)
+          await setGeocodeCache(env, cacheKey, body, GEO_CACHE_TTL)
+          return new Response(body, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        } catch (err) {
+          console.error('[geocode]', err)
+          return jsonResponse({ error: 'Geocoding failed' }, 502)
+        }
+      }
+
+      if (url.pathname === '/api/admin/reverse' && request.method === 'GET') {
+        const rk = getGeocodeRateKey(request, 'reverse')
+        if (!checkGeocodeRateLimit(rk)) {
+          return jsonResponse({ error: 'rate_limited' }, 429)
+        }
+        const lat = parseFloat(url.searchParams.get('lat'))
+        const lng = parseFloat(url.searchParams.get('lng'))
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          return jsonResponse({ error: 'Parameters lat and lng are required and must be numbers' }, 400)
+        }
+        const cacheKey = `rev:${lat.toFixed(4)}:${lng.toFixed(4)}`
+        const cached = await getGeocodeCache(env, cacheKey)
+        if (cached) {
+          return new Response(cached, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+          })
+        }
+        const params = new URLSearchParams({
+          format: 'jsonv2',
+          addressdetails: '1',
+          lat: String(lat),
+          lon: String(lng),
+        })
+        const nomUrl = `https://nominatim.openstreetmap.org/reverse?${params}`
+        try {
+          const res = await fetch(nomUrl, { headers: nominatimHeaders })
+          if (!res.ok) {
+            return jsonResponse({ error: 'Reverse geocoding service unavailable' }, 502)
+          }
+          const data = await res.json()
+          const result = normalizeResult(data)
+          const body = JSON.stringify([result])
+          await setGeocodeCache(env, cacheKey, body, GEO_CACHE_TTL)
+          return new Response(body, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        } catch (err) {
+          console.error('[reverse]', err)
+          return jsonResponse({ error: 'Reverse geocoding failed' }, 502)
+        }
       }
 
       // --- Admin stops CRUD ---
