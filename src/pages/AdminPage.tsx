@@ -5,7 +5,7 @@ import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { AuthShell } from '../components/auth/AuthShell'
 import { AuthCard } from '../components/auth/AuthCard'
-import { AddressAutocomplete } from '../components/admin/AddressAutocomplete'
+import { AddressInput } from '../components/admin/AddressInput'
 import { CountryComboBox } from '../components/admin/CountryComboBox'
 import { getCountryName, normalizeCountry } from '../lib/geo/countries'
 import './AdminPage.css'
@@ -52,6 +52,7 @@ export function AdminPage() {
   const [geoError, setGeoError] = useState<string | null>(null)
   const [isGeoLoading, setIsGeoLoading] = useState(false)
   const autoFillRef = useRef(false)
+  const suppressLookupRef = useRef(false)
 
   const fetchStops = useCallback(async () => {
     setLoadError(null)
@@ -323,21 +324,31 @@ export function AdminPage() {
     address?: { city?: string; state?: string; postcode?: string; countryCode?: string }
   }
 
-  const fillFromGeoResult = useCallback(
-    (r: GeoResult) => {
+  const applyPickedLocation = useCallback(
+    (pick: { displayName: string; lat: number; lng: number; city?: string; postcode?: string; countryCode?: string }) => {
+      const lat = Number(pick.lat)
+      const lng = Number(pick.lng)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        setGeoError('Invalid coordinates from suggestion')
+        return
+      }
       if (!selectedStop) return
-      autoFillRef.current = true
-      const s = { ...selectedStop }
-      s.lat = r.lat
-      s.lng = r.lng
-      if (!s.city?.trim() && r.address?.city) s.city = r.address.city
-      if (!s.country?.trim() && r.address?.countryCode) s.country = (r.address.countryCode || '').toUpperCase()
-      setSelectedStop(s)
-      setGeoCandidates([])
       setGeoError(null)
-      queueMicrotask(() => {
+      suppressLookupRef.current = true
+      autoFillRef.current = true
+      setSelectedStop((prev) => ({
+        ...prev,
+        address: pick.displayName,
+        lat,
+        lng,
+        city: prev.city?.trim() ? prev.city : (pick.city ?? prev.city),
+        country: prev.country?.trim() ? prev.country : (pick.countryCode ? (pick.countryCode as string).toUpperCase() : prev.country),
+      }))
+      setGeoCandidates([])
+      setTimeout(() => {
+        suppressLookupRef.current = false
         autoFillRef.current = false
-      })
+      }, 400)
     },
     [selectedStop]
   )
@@ -345,16 +356,19 @@ export function AdminPage() {
   const fillFromReverseResult = useCallback(
     (r: GeoResult) => {
       if (!selectedStop) return
-      autoFillRef.current = true
-      const s = { ...selectedStop }
-      s.address = r.displayName
-      if (!s.city?.trim() && r.address?.city) s.city = r.address.city
-      if (!s.country?.trim() && r.address?.countryCode) s.country = (r.address.countryCode || '').toUpperCase()
-      setSelectedStop(s)
       setGeoError(null)
-      queueMicrotask(() => {
+      suppressLookupRef.current = true
+      autoFillRef.current = true
+      setSelectedStop((prev) => ({
+        ...prev,
+        address: r.displayName,
+        city: prev.city?.trim() ? prev.city : (r.address?.city ?? prev.city),
+        country: prev.country?.trim() ? prev.country : (r.address?.countryCode ? (r.address.countryCode as string).toUpperCase() : prev.country),
+      }))
+      setTimeout(() => {
+        suppressLookupRef.current = false
         autoFillRef.current = false
-      })
+      }, 400)
     },
     [selectedStop]
   )
@@ -386,7 +400,14 @@ export function AdminPage() {
       }
 
       if (results.length === 1) {
-        fillFromGeoResult(results[0])
+        const r = results[0]
+        applyPickedLocation({
+          displayName: r.displayName,
+          lat: r.lat,
+          lng: r.lng,
+          city: r.address?.city,
+          countryCode: r.address?.countryCode,
+        })
       } else if (results.length > 1) {
         setGeoCandidates(
           results.map((r) => ({
@@ -407,7 +428,7 @@ export function AdminPage() {
     } finally {
       setIsGeoLoading(false)
     }
-  }, [selectedStop, fillFromGeoResult])
+  }, [selectedStop, applyPickedLocation])
 
   const runReverse = useCallback(async () => {
     if (!selectedStop) return
@@ -599,20 +620,14 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
-                <AddressAutocomplete
+                <AddressInput
+                  value={selectedStop.address}
                   countryCode={selectedStop.country}
-                  city={selectedStop.city}
-                  onPick={(pick) => {
-                    updateField('address', pick.displayName)
-                    updateField('city', pick.city || selectedStop.city)
-                    updateField('country', pick.countryCode || selectedStop.country)
-                    updateField('lat', pick.lat)
-                    updateField('lng', pick.lng)
-                  }}
-                />
-                <label className="admin-page__label span2">
-                  <span className="admin-page__label-row">
-                    Address
+                  onChangeAddress={(v) => updateField('address', v)}
+                  onPickSuggestion={applyPickedLocation}
+                  onBlur={handleAddressBlur}
+                  suppressLookupRef={suppressLookupRef}
+                  labelAction={
                     <button
                       type="button"
                       onClick={runGeocode}
@@ -622,38 +637,32 @@ export function AdminPage() {
                     >
                       Auto-fill coords
                     </button>
-                  </span>
-                  <input
-                    type="text"
-                    value={selectedStop.address}
-                    onChange={(e) => updateField('address', e.target.value)}
-                    onBlur={handleAddressBlur}
-                    className="admin-page__input"
-                  />
-                  {geoCandidates.length > 1 && (
-                    <div className="admin-page__geo-dropdown">
-                      <p className="admin-page__geo-dropdown-label">Select address match…</p>
-                      {geoCandidates.map((c, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="admin-page__geo-dropdown-item"
-                          onClick={() => {
-                            fillFromGeoResult({
-                              displayName: c.displayName,
-                              lat: c.lat,
-                              lng: c.lng,
-                              address: { city: c.city, postcode: c.postcode, countryCode: c.countryCode },
-                            })
-                          }}
-                        >
-                          {c.displayName}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {geoError && <p className="admin-page__geo-msg">{geoError}</p>}
-                </label>
+                  }
+                />
+                {geoCandidates.length > 1 && (
+                  <div className="admin-page__geo-dropdown span2">
+                    <p className="admin-page__geo-dropdown-label">Select address match…</p>
+                    {geoCandidates.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="admin-page__geo-dropdown-item"
+                        onClick={() =>
+                          applyPickedLocation({
+                            displayName: c.displayName,
+                            lat: c.lat,
+                            lng: c.lng,
+                            city: c.city,
+                            countryCode: c.countryCode,
+                          })
+                        }
+                      >
+                        {c.displayName}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {geoError && <p className="admin-page__geo-msg span2">{geoError}</p>}
                 <label className="admin-page__label admin-page__label--coords">
                   <span className="admin-page__label-row">
                     Lat / Lng

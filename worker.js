@@ -441,10 +441,12 @@ export default {
 
       function normalizeResult(item) {
         const addr = item.address || {}
+        const lat = Number(item.lat)
+        const lon = item.lon != null ? Number(item.lon) : item.lng != null ? Number(item.lng) : NaN
         return {
           displayName: item.display_name || '',
-          lat: parseFloat(item.lat) || 0,
-          lng: parseFloat(item.lon) || 0,
+          lat: Number.isFinite(lat) ? lat : 0,
+          lng: Number.isFinite(lon) ? lon : 0,
           address: {
             city: addr.city || addr.town || addr.village || addr.municipality || '',
             state: addr.state || addr.county || '',
