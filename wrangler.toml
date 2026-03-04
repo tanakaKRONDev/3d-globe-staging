@@ -3,8 +3,9 @@ main = "worker.js"
 compatibility_date = "2024-01-01"
 
 # Secrets (set via: wrangler secret put <NAME>)
-# - SITE_PASSWORD: HTTP Basic Auth for the site
-# - ADMIN_PASSWORD: admin API login; required for POST /api/admin/login and /api/admin/*
+# - SITE_PASSWORD: site gate; branded login at /auth/login, cookie site_auth
+# - SITE_AUTH_SECRET: random long string used to sign site_auth cookie (e.g. openssl rand -hex 32)
+# - ADMIN_PASSWORD: admin API login; POST /api/admin/login and /api/admin/*
 
 # -------------------------
 # D1 (Tour Stops Database)

@@ -1,13 +1,14 @@
 /**
- * Password gate for the 3D Globe landing page.
- * Uses HTTP Basic Auth at the Worker level (SITE_PASSWORD).
- * Admin API: POST /api/admin/login with { password }, then session cookie for /api/admin/*
- * Secrets: SITE_PASSWORD, ADMIN_PASSWORD (set via wrangler secret put)
+ * Site gate: branded HTML login + cookie (SITE_PASSWORD, SITE_AUTH_SECRET).
+ * Admin: /admin and /api/admin/* use ADMIN_PASSWORD only (no site gate).
+ * Secrets: SITE_PASSWORD, SITE_AUTH_SECRET, ADMIN_PASSWORD (wrangler secret put)
  */
 
 const encoder = new TextEncoder()
 const ADMIN_COOKIE = 'admin_session'
 const SESSION_MAX_AGE_SEC = 12 * 60 * 60 // 12 hours
+const SITE_AUTH_COOKIE = 'site_auth'
+const SITE_AUTH_MAX_AGE_SEC = 7 * 24 * 60 * 60 // 7 days
 
 function timingSafeEqual(a, b) {
   const aBytes = encoder.encode(a)
@@ -16,13 +17,6 @@ function timingSafeEqual(a, b) {
     return !crypto.subtle.timingSafeEqual(aBytes, aBytes)
   }
   return crypto.subtle.timingSafeEqual(aBytes, bBytes)
-}
-
-function unauthorized() {
-  return new Response('Unauthorized', {
-    status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="Internal"' },
-  })
 }
 
 function adminUnauthorized() {
@@ -89,6 +83,152 @@ function sessionCookieHeader(value, request) {
   let s = `${ADMIN_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SESSION_MAX_AGE_SEC}; SameSite=Lax`
   if (isSecure) s += '; Secure'
   return s
+}
+
+// --- Site auth (cookie) ---
+async function getSiteSigningKey(env) {
+  const secret = env.SITE_AUTH_SECRET || ''
+  return crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  )
+}
+
+async function signSiteToken(env) {
+  const exp = Math.floor((Date.now() + SITE_AUTH_MAX_AGE_SEC * 1000) / 1000)
+  const key = await getSiteSigningKey(env)
+  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(String(exp)))
+  const hex = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  return `${exp}.${hex}`
+}
+
+async function verifySiteToken(env, token) {
+  if (!token || typeof token !== 'string') return false
+  const dot = token.indexOf('.')
+  if (dot === -1) return false
+  const exp = parseInt(token.slice(0, dot), 10)
+  if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) return false
+  const key = await getSiteSigningKey(env)
+  const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(String(exp)))
+  const expectedHex = Array.from(new Uint8Array(expectedSig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  const actualHex = token.slice(dot + 1)
+  if (expectedHex.length !== actualHex.length) return false
+  const expectedBytes = new Uint8Array(expectedHex.length / 2)
+  const actualBytes = new Uint8Array(actualHex.length / 2)
+  for (let i = 0; i < expectedBytes.length; i++) {
+    expectedBytes[i] = parseInt(expectedHex.slice(i * 2, i * 2 + 2), 16)
+    actualBytes[i] = parseInt(actualHex.slice(i * 2, i * 2 + 2), 16)
+  }
+  return crypto.subtle.timingSafeEqual(expectedBytes, actualBytes)
+}
+
+function getSiteAuthCookie(request) {
+  const raw = request.headers.get('Cookie')
+  if (!raw) return null
+  const match = raw.match(new RegExp(`${SITE_AUTH_COOKIE}=([^;]+)`))
+  return match ? decodeURIComponent(match[1].trim()) : null
+}
+
+function siteAuthCookieHeader(value, request) {
+  const isSecure = new URL(request.url).protocol === 'https:'
+  let s = `${SITE_AUTH_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SITE_AUTH_MAX_AGE_SEC}; SameSite=Lax`
+  if (isSecure) s += '; Secure'
+  return s
+}
+
+function clearSiteAuthCookie(request) {
+  const isSecure = new URL(request.url).protocol === 'https:'
+  let s = `${SITE_AUTH_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`
+  if (isSecure) s += '; Secure'
+  return s
+}
+
+/** Branded login page HTML (same look as /admin login). */
+function loginPageHtml(returnTo, error) {
+  const returnToAttr = returnTo ? ` value="${returnTo.replace(/"/g, '&quot;')}"` : ' value="/"'
+  const errorHtml = error ? `<p class="site-login__error">${error.replace(/</g, '&lt;')}</p>` : ''
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in – WORLD TOUR 2026-2027</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      background: #070A0F;
+      color: rgba(255,255,255,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      -webkit-font-smoothing: antialiased;
+    }
+    .site-login__card {
+      background: rgba(12, 16, 24, 0.62);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .site-login__title { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem 0; letter-spacing: -0.025em; }
+    .site-login__sub { color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0 0 1.25rem 0; }
+    .site-login__form { display: flex; flex-direction: column; gap: 1rem; }
+    .site-login__label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; color: rgba(255,255,255,0.65); }
+    .site-login__input {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      font-family: inherit;
+      color: rgba(255,255,255,0.88);
+      background: #0A0E15;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.5rem;
+    }
+    .site-login__input:focus { outline: none; border-color: rgba(255,255,255,0.16); }
+    .site-login__btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      font-weight: 500;
+      background: #E7D1A7;
+      color: #070A0F;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .site-login__btn:hover { background: #D4C1A0; }
+    .site-login__error { color: rgba(239,68,68,0.95); font-size: 0.875rem; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="site-login__card">
+    <h1 class="site-login__title">WORLD TOUR 2026-2027</h1>
+    <p class="site-login__sub">Internal Access</p>
+    <form class="site-login__form" method="post" action="/auth/login">
+      <input type="hidden" name="returnTo"${returnToAttr} />
+      <label class="site-login__label">
+        Password
+        <input type="password" name="password" class="site-login__input" autocomplete="current-password" autofocus />
+      </label>
+      ${errorHtml}
+      <button type="submit" class="site-login__btn">Enter</button>
+    </form>
+  </div>
+</body>
+</html>`
 }
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {
@@ -338,27 +478,113 @@ export default {
       return jsonResponse({ error: 'Not Found' }, 404)
     }
 
-    const PASS = env.SITE_PASSWORD
-    if (!PASS) {
-      return new Response('Site password not configured. Set SITE_PASSWORD secret.', { status: 500 })
-    }
-
-    const auth = request.headers.get('Authorization')
-    if (!auth || !auth.startsWith('Basic ')) {
-      return unauthorized()
-    }
-
-    try {
-      const encoded = auth.slice(6)
-      const decoded = atob(encoded)
-      const colonIndex = decoded.indexOf(':')
-      if (colonIndex === -1) return unauthorized()
-      const pass = decoded.slice(colonIndex + 1)
-      if (!timingSafeEqual(pass, PASS)) {
-        return unauthorized()
+    // --- Site auth routes (no site gate) ---
+    if (url.pathname === '/auth/login') {
+      if (request.method === 'GET') {
+        const returnTo = url.searchParams.get('returnTo') || '/'
+        return new Response(loginPageHtml(returnTo, null), {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        })
       }
-    } catch {
-      return unauthorized()
+      if (request.method === 'POST') {
+        if (!env.SITE_PASSWORD) {
+          return new Response(loginPageHtml('/', 'Site password not configured.'), {
+            status: 500,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
+        }
+        let password = ''
+        let returnTo = '/'
+        const ct = request.headers.get('Content-Type') || ''
+        if (ct.includes('application/json')) {
+          try {
+            const body = await request.json()
+            password = body && body.password != null ? String(body.password) : ''
+            returnTo = body && body.returnTo != null ? String(body.returnTo) : '/'
+          } catch {
+            return new Response(loginPageHtml('/', 'Invalid request'), {
+              status: 400,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            })
+          }
+        } else {
+          const body = await request.text()
+          const params = new URLSearchParams(body)
+          password = params.get('password') || ''
+          returnTo = params.get('returnTo') || '/'
+        }
+        const safeReturn = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+        if (!timingSafeEqual(password, env.SITE_PASSWORD)) {
+          return new Response(loginPageHtml(safeReturn, 'Invalid password'), {
+            status: 401,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
+        }
+        const token = await signSiteToken(env)
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: safeReturn,
+            'Set-Cookie': siteAuthCookieHeader(token, request),
+          },
+        })
+      }
+    }
+    if (url.pathname === '/auth/logout' && (request.method === 'POST' || request.method === 'GET')) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: '/auth/login',
+          'Set-Cookie': clearSiteAuthCookie(request),
+        },
+      })
+    }
+
+    // Skip site gate: /admin (frontend SPA; /api/admin/* already handled above)
+    if (url.pathname.startsWith('/admin')) {
+      return env.ASSETS.fetch(request)
+    }
+
+    // Site gate: require valid site_auth cookie for all other routes
+    const siteCookie = getSiteAuthCookie(request)
+    const siteValid = siteCookie && (await verifySiteToken(env, siteCookie))
+    if (!siteValid) {
+      if (url.pathname.startsWith('/api/')) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      const returnTo = url.pathname + url.search
+      return new Response(loginPageHtml(returnTo || '/', null), {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      })
+    }
+
+    // Gated: GET /api/stops
+    if (request.method === 'GET' && url.pathname === '/api/stops') {
+      try {
+        const { results } = await env.DB.prepare(
+          `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+           FROM stops
+           ORDER BY stop_order ASC`
+        ).all()
+        return new Response(JSON.stringify(results ?? []), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60',
+          },
+        })
+      } catch (err) {
+        console.error('[api/stops]', err)
+        return new Response(JSON.stringify({ error: 'Failed to fetch stops' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     return env.ASSETS.fetch(request)
