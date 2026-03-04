@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.tsx'
 import { AdminPage } from './pages/AdminPage'
 import './styles/tokens.css'
+import './styles/theme.css'
+import './styles/admin.css'
 import './index.css'
 import { installTokenlessGuardrails } from './lib/cesium/tokenlessGuardrails'
 

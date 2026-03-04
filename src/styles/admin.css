@@ -1,0 +1,27 @@
+/**
+ * Admin route overrides: neutralize globe layout and ensure admin page works.
+ * Applied when body.mode-admin is set by the admin route.
+ */
+
+body.mode-admin {
+  overflow: auto;
+}
+
+/* Hide globe noise overlay on admin */
+body.mode-admin::before {
+  display: none;
+}
+
+/* Hide globe-specific overlays/containers if they ever appear in DOM */
+body.mode-admin .app-root,
+body.mode-admin .app-layout,
+body.mode-admin .globeOverlay,
+body.mode-admin .globeCanvas,
+body.mode-admin .globeRoot {
+  display: none !important;
+}
+
+/* Restore pointer-events so admin UI is clickable (overrides globe layout rules) */
+body.mode-admin * {
+  pointer-events: auto;
+}

@@ -1,10 +1,30 @@
 /* Admin panel – premium UI (tokens.css) */
 
+/* Full viewport shell: dark background, centered container */
+.admin-shell {
+  min-height: 100dvh;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  padding: 14px;
+}
+
+@media (min-width: 768px) {
+  .admin-shell {
+    padding: 24px;
+  }
+}
+
+.admin-shell__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .admin-page {
   min-height: 100%;
-  height: 100%;
   overflow: auto;
-  background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
   padding: var(--space-6);

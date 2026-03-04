@@ -8,6 +8,7 @@ import { StopList } from './components/StopList'
 import { StopPanel } from './components/StopPanel'
 import { CreditsPill } from './components/CreditsPill'
 import { PremiumLoader, type LoadingStage } from './components/PremiumLoader'
+import { useBodyClass } from './lib/ui/useBodyClass'
 import { loadStops } from './lib/data/loadStops'
 import type { Stop, Scenario } from './lib/data/types'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
@@ -18,6 +19,7 @@ import './styles/loader.css'
 export type ViewMode = 'overview' | 'venue'
 
 function App() {
+  useBodyClass('mode-globe')
   const [stops, setStops] = useState<Stop[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('overview')
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null)

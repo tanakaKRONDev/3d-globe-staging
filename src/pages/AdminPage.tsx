@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Trash2, ArrowLeft } from 'lucide-react'
+import { useBodyClass } from '../lib/ui/useBodyClass'
+import { AdminShell } from '../components/layout/AdminShell'
 import './AdminPage.css'
 
 /** Stop shape returned by GET /api/admin/stops and used in POST/PUT */
@@ -26,6 +28,7 @@ async function adminFetch(path: string, options: RequestInit = {}) {
 }
 
 export function AdminPage() {
+  useBodyClass('mode-admin')
   const [authChecked, setAuthChecked] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
   const [stops, setStops] = useState<AdminStop[]>([])
@@ -209,45 +212,50 @@ export function AdminPage() {
 
   if (!authChecked) {
     return (
-      <div className="admin-page">
-        <div className="admin-page__card">
-          <p className="admin-page__muted">Checking session…</p>
+      <AdminShell>
+        <div className="admin-page">
+          <div className="admin-page__card">
+            <p className="admin-page__muted">Checking session…</p>
+          </div>
         </div>
-      </div>
+      </AdminShell>
     )
   }
 
   if (!authenticated) {
     return (
-      <div className="admin-page">
-        <div className="admin-page__card admin-page__card--narrow">
-          <h1 className="admin-page__title">Admin</h1>
-          <p className="admin-page__muted">Sign in to manage stops</p>
-          <form onSubmit={handleLogin} className="admin-page__form">
-            <label className="admin-page__label">
-              Password
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                className="admin-page__input"
-                autoComplete="current-password"
-                autoFocus
-              />
-            </label>
-            {loginError && <p className="admin-page__error">{loginError}</p>}
-            <button type="submit" className="admin-page__btn admin-page__btn--primary">
-              Sign in
-            </button>
-          </form>
+      <AdminShell>
+        <div className="admin-page">
+          <div className="admin-page__card admin-page__card--narrow">
+            <h1 className="admin-page__title">Admin</h1>
+            <p className="admin-page__muted">Sign in to manage stops</p>
+            <form onSubmit={handleLogin} className="admin-page__form">
+              <label className="admin-page__label">
+                Password
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="admin-page__input"
+                  autoComplete="current-password"
+                  autoFocus
+                />
+              </label>
+              {loginError && <p className="admin-page__error">{loginError}</p>}
+              <button type="submit" className="admin-page__btn admin-page__btn--primary">
+                Sign in
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+      </AdminShell>
     )
   }
 
   return (
-    <div className="admin-page">
-      <header className="admin-page__header">
+    <AdminShell>
+      <div className="admin-page">
+        <header className="admin-page__header">
         <Link to="/" className="admin-page__back">
           <ArrowLeft size={20} /> Back to site
         </Link>
@@ -430,5 +438,6 @@ export function AdminPage() {
         </section>
       </div>
     </div>
+    </AdminShell>
   )
 }
