@@ -16,3 +16,13 @@
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(12, 16, 24, 0.4), transparent);
   -webkit-font-smoothing: antialiased;
 }
+
+@media (max-width: 640px) {
+  .auth-shell {
+    padding: 14px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(14px + env(safe-area-inset-left, 0px));
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
+  }
+}

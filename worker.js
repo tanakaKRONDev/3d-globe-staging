@@ -207,6 +207,13 @@ function loginPageHtml(returnTo, error) {
     .auth-btn{padding:0.5rem 1rem;font-size:0.875rem;font-family:inherit;font-weight:500;background:#e7d1a7;color:#070a0f;
       border:none;border-radius:0.5rem;cursor:pointer}
     .auth-btn:hover{background:#d4c1a0}
+    @media(max-width:640px){
+      .auth-shell{padding:14px;padding-top:calc(14px + env(safe-area-inset-top,0));padding-bottom:calc(14px + env(safe-area-inset-bottom,0));
+        padding-left:calc(14px + env(safe-area-inset-left,0));padding-right:calc(14px + env(safe-area-inset-right,0))}
+      .auth-card{width:100%;max-width:100%;border-radius:1rem;padding:20px}
+      .auth-input,.auth-btn{min-height:48px;font-size:16px}
+      .auth-btn{padding:0.75rem 1rem}
+    }
   </style>
 </head>
 <body>
