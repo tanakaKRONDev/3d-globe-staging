@@ -2,6 +2,10 @@ name = "3d-globe-landing-page"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# Secrets (set via: wrangler secret put <NAME>)
+# - SITE_PASSWORD: HTTP Basic Auth for the site
+# - ADMIN_PASSWORD: admin API login; required for POST /api/admin/login and /api/admin/*
+
 # -------------------------
 # D1 (Tour Stops Database)
 # -------------------------
