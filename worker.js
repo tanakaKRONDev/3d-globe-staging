@@ -168,87 +168,63 @@ function clearSiteAuthCookie(request) {
   return s
 }
 
-/** Branded login page HTML (same look as /admin). Never throws; no external deps. */
+/** Branded login page HTML (same layout as React AuthShell/AuthCard). Never throws; no external deps. */
 function loginPageHtml(returnTo, error) {
   const safeReturn = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
     ? returnTo.replace(/"/g, '&quot;')
     : '/'
   const returnToAttr = ` value="${safeReturn}"`
   const errorHtml = error
-    ? `<p class="site-login__error">${String(error).replace(/</g, '&lt;').replace(/&/g, '&amp;')}</p>`
+    ? `<p class="auth-card__error">${String(error).replace(/</g, '&lt;').replace(/&/g, '&amp;')}</p>`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Sign in – WORLD TOUR 2026-2027</title>
   <style>
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; padding: 0; }
-    body {
-      font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-      background: #070A0F;
-      color: rgba(255,255,255,0.88);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      -webkit-font-smoothing: antialiased;
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0;padding:0}
+    .auth-shell{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0));padding-bottom:calc(24px + env(safe-area-inset-bottom,0));
+      padding-left:calc(24px + env(safe-area-inset-left,0));padding-right:calc(24px + env(safe-area-inset-right,0));
+      background:#070a0f;background-image:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(12,16,24,0.6),transparent),radial-gradient(ellipse 60% 40% at 100% 100%,rgba(12,16,24,0.4),transparent);
+      font-family:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased
     }
-    .site-login__card {
-      background: rgba(12, 16, 24, 0.62);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      max-width: 360px;
-      width: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-    .site-login__title { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem 0; letter-spacing: -0.025em; }
-    .site-login__sub { color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0 0 1.25rem 0; }
-    .site-login__form { display: flex; flex-direction: column; gap: 1rem; }
-    .site-login__label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; color: rgba(255,255,255,0.65); }
-    .site-login__input {
-      padding: 0.5rem 0.75rem;
-      font-size: 1rem;
-      font-family: inherit;
-      color: rgba(255,255,255,0.88);
-      background: #0A0E15;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 0.5rem;
-    }
-    .site-login__input:focus { outline: none; border-color: rgba(255,255,255,0.16); }
-    .site-login__btn {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      font-family: inherit;
-      font-weight: 500;
-      background: #E7D1A7;
-      color: #070A0F;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-    }
-    .site-login__btn:hover { background: #D4C1A0; }
-    .site-login__error { color: rgba(239,68,68,0.95); font-size: 0.875rem; margin: 0; }
+    .auth-card{max-width:420px;width:100%;background:rgba(12,16,24,0.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+    .auth-card__title{font-size:1.5rem;font-weight:600;letter-spacing:-0.025em;margin:0 0 0.25rem 0;color:rgba(255,255,255,0.88)}
+    .auth-card__subtitle{font-size:0.875rem;color:rgba(255,255,255,0.45);margin:0 0 1.25rem 0}
+    .auth-card__body{display:flex;flex-direction:column;gap:1rem}
+    .auth-card__form{display:flex;flex-direction:column;gap:1rem}
+    .auth-card__error{color:rgba(239,68,68,0.95);font-size:0.875rem;margin:0}
+    .auth-label{display:flex;flex-direction:column;gap:0.25rem;font-size:0.875rem;color:rgba(255,255,255,0.65)}
+    .auth-input{padding:0.5rem 0.75rem;font-size:1rem;font-family:inherit;color:rgba(255,255,255,0.88);background:#0a0e15;
+      border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;width:100%}
+    .auth-input:focus{outline:none;border-color:rgba(255,255,255,0.16)}
+    .auth-btn{padding:0.5rem 1rem;font-size:0.875rem;font-family:inherit;font-weight:500;background:#e7d1a7;color:#070a0f;
+      border:none;border-radius:0.5rem;cursor:pointer}
+    .auth-btn:hover{background:#d4c1a0}
   </style>
 </head>
 <body>
-  <div class="site-login__card">
-    <h1 class="site-login__title">WORLD TOUR 2026-2027</h1>
-    <p class="site-login__sub">Internal Access</p>
-    <form class="site-login__form" method="post" action="/auth/login">
-      <input type="hidden" name="returnTo"${returnToAttr} />
-      <label class="site-login__label">
-        Password
-        <input type="password" name="password" class="site-login__input" autocomplete="current-password" autofocus />
-      </label>
-      ${errorHtml}
-      <button type="submit" class="site-login__btn">Enter</button>
-    </form>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1 class="auth-card__title">WORLD TOUR 2026-2027</h1>
+      <p class="auth-card__subtitle">Internal Access</p>
+      <div class="auth-card__body">
+        <form class="auth-card__form" method="post" action="/auth/login">
+          <input type="hidden" name="returnTo"${returnToAttr} />
+          <label class="auth-label">Password
+            <input type="password" name="password" class="auth-input" autocomplete="current-password" autofocus />
+          </label>
+          <button type="submit" class="auth-btn">Enter</button>
+        </form>
+        ${errorHtml}
+      </div>
+    </div>
   </div>
 </body>
 </html>`

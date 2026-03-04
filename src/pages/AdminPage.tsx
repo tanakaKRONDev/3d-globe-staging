@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Plus, Trash2, ArrowLeft } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
+import { AuthShell } from '../components/auth/AuthShell'
+import { AuthCard } from '../components/auth/AuthCard'
 import './AdminPage.css'
 
 /** Stop shape returned by GET /api/admin/stops and used in POST/PUT */
@@ -224,31 +226,26 @@ export function AdminPage() {
 
   if (!authenticated) {
     return (
-      <AdminShell>
-        <div className="admin-page">
-          <div className="admin-page__card admin-page__card--narrow">
-            <h1 className="admin-page__title">Admin</h1>
-            <p className="admin-page__muted">Sign in to manage stops</p>
-            <form onSubmit={handleLogin} className="admin-page__form">
-              <label className="admin-page__label">
-                Password
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="admin-page__input"
-                  autoComplete="current-password"
-                  autoFocus
-                />
-              </label>
-              {loginError && <p className="admin-page__error">{loginError}</p>}
-              <button type="submit" className="admin-page__btn admin-page__btn--primary">
-                Sign in
-              </button>
-            </form>
-          </div>
-        </div>
-      </AdminShell>
+      <AuthShell>
+        <AuthCard title="Admin" subtitle="Sign in to manage stops" error={loginError || undefined}>
+          <form onSubmit={handleLogin} className="auth-card__form">
+            <label className="auth-label">
+              Password
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="auth-input"
+                autoComplete="current-password"
+                autoFocus
+              />
+            </label>
+            <button type="submit" className="auth-btn">
+              Sign in
+            </button>
+          </form>
+        </AuthCard>
+      </AuthShell>
     )
   }
 

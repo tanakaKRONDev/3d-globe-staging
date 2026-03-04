@@ -1,0 +1,87 @@
+/* Shared auth card: glass panel, 420px max-width, same for site + admin */
+
+.auth-card {
+  max-width: 420px;
+  width: 100%;
+  background: rgba(12, 16, 24, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+.auth-card__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.25rem 0;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.auth-card__subtitle {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 1.25rem 0;
+}
+
+.auth-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-card__error {
+  color: rgba(239, 68, 68, 0.95);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Input and button (match Worker HTML + admin form) */
+.auth-card .auth-input {
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.88);
+  background: #0a0e15;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  width: 100%;
+}
+
+.auth-card .auth-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.auth-card .auth-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 500;
+  background: #e7d1a7;
+  color: #070a0f;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.auth-card .auth-btn:hover {
+  background: #d4c1a0;
+}
+
+.auth-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-card .auth-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.65);
+}
