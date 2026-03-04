@@ -8,7 +8,6 @@ const encoder = new TextEncoder()
 const ADMIN_COOKIE = 'admin_session'
 const SESSION_MAX_AGE_SEC = 12 * 60 * 60 // 12 hours
 const SITE_AUTH_COOKIE = 'site_auth'
-const SITE_AUTH_MAX_AGE_SEC = 7 * 24 * 60 * 60 // 7 days
 
 function timingSafeEqual(a, b) {
   const aBytes = encoder.encode(a)
@@ -85,48 +84,65 @@ function sessionCookieHeader(value, request) {
   return s
 }
 
-// --- Site auth (cookie) ---
-async function getSiteSigningKey(env) {
-  const secret = env.SITE_AUTH_SECRET || ''
+// --- Site auth: WebCrypto-only cookie signing (no Node APIs) ---
+function b64urlEncode(bytes) {
+  let s = ''
+  bytes.forEach((b) => (s += String.fromCharCode(b)))
+  return btoa(s).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+}
+
+function b64urlDecode(str) {
+  str = str.replaceAll('-', '+').replaceAll('_', '/')
+  while (str.length % 4) str += '='
+  const bin = atob(str)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
+async function hmacKey(secret) {
   return crypto.subtle.importKey(
     'raw',
-    encoder.encode(secret),
+    new TextEncoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify']
   )
 }
 
-async function signSiteToken(env) {
-  const exp = Math.floor((Date.now() + SITE_AUTH_MAX_AGE_SEC * 1000) / 1000)
-  const key = await getSiteSigningKey(env)
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(String(exp)))
-  const hex = Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-  return `${exp}.${hex}`
+async function signToken(secret, payloadObj) {
+  const payloadJson = JSON.stringify(payloadObj)
+  const payloadBytes = new TextEncoder().encode(payloadJson)
+  const payload = b64urlEncode(payloadBytes)
+  const key = await hmacKey(secret)
+  const sigBytes = new Uint8Array(
+    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload))
+  )
+  const sig = b64urlEncode(sigBytes)
+  return `${payload}.${sig}`
 }
 
-async function verifySiteToken(env, token) {
-  if (!token || typeof token !== 'string') return false
-  const dot = token.indexOf('.')
-  if (dot === -1) return false
-  const exp = parseInt(token.slice(0, dot), 10)
-  if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) return false
-  const key = await getSiteSigningKey(env)
-  const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(String(exp)))
-  const expectedHex = Array.from(new Uint8Array(expectedSig))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-  const actualHex = token.slice(dot + 1)
-  if (expectedHex.length !== actualHex.length) return false
-  const expectedBytes = new Uint8Array(expectedHex.length / 2)
-  const actualBytes = new Uint8Array(actualHex.length / 2)
-  for (let i = 0; i < expectedBytes.length; i++) {
-    expectedBytes[i] = parseInt(expectedHex.slice(i * 2, i * 2 + 2), 16)
-    actualBytes[i] = parseInt(actualHex.slice(i * 2, i * 2 + 2), 16)
+async function verifyToken(secret, token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null
+  const [payloadB64, sig] = token.split('.', 2)
+  const key = await hmacKey(secret)
+  try {
+    const ok = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      b64urlDecode(sig),
+      new TextEncoder().encode(payloadB64)
+    )
+    if (!ok) {
+      console.error('[auth] bad signature')
+      return null
+    }
+    const payloadJson = new TextDecoder().decode(b64urlDecode(payloadB64))
+    return JSON.parse(payloadJson)
+  } catch (e) {
+    console.error('[auth] verify failed', e)
+    return null
   }
-  return crypto.subtle.timingSafeEqual(expectedBytes, actualBytes)
 }
 
 function getSiteAuthCookie(request) {
@@ -136,9 +152,11 @@ function getSiteAuthCookie(request) {
   return match ? decodeURIComponent(match[1].trim()) : null
 }
 
+const SITE_AUTH_MAX_AGE_SEC_NUM = 604800 // 7 days
+
 function siteAuthCookieHeader(value, request) {
   const isSecure = new URL(request.url).protocol === 'https:'
-  let s = `${SITE_AUTH_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SITE_AUTH_MAX_AGE_SEC}; SameSite=Lax`
+  let s = `${SITE_AUTH_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SITE_AUTH_MAX_AGE_SEC_NUM}; SameSite=Lax`
   if (isSecure) s += '; Secure'
   return s
 }
@@ -150,10 +168,15 @@ function clearSiteAuthCookie(request) {
   return s
 }
 
-/** Branded login page HTML (same look as /admin login). */
+/** Branded login page HTML (same look as /admin). Never throws; no external deps. */
 function loginPageHtml(returnTo, error) {
-  const returnToAttr = returnTo ? ` value="${returnTo.replace(/"/g, '&quot;')}"` : ' value="/"'
-  const errorHtml = error ? `<p class="site-login__error">${error.replace(/</g, '&lt;')}</p>` : ''
+  const safeReturn = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+    ? returnTo.replace(/"/g, '&quot;')
+    : '/'
+  const returnToAttr = ` value="${safeReturn}"`
+  const errorHtml = error
+    ? `<p class="site-login__error">${String(error).replace(/</g, '&lt;').replace(/&/g, '&amp;')}</p>`
+    : ''
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -312,38 +335,35 @@ function validateStopPayload(body, isUpdate) {
   }
 }
 
+/** Paths that skip site gate (no recursion into gate). */
+function skipSiteGate(pathname) {
+  return (
+    pathname === '/auth/login' ||
+    pathname === '/auth/logout' ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api/admin')
+  )
+}
+
 export default {
-  async fetch(request, env) {
-    const url = new URL(request.url)
+  async fetch(request, env, ctx) {
+    try {
+      const url = new URL(request.url)
 
-    if (url.pathname === '/health') {
-      return new Response('OK', { status: 200 })
-    }
+      if (url.pathname === '/health') {
+        return new Response('OK', { status: 200 })
+      }
 
-    if (request.method === 'GET' && url.pathname === '/api/stops') {
-      try {
-        const { results } = await env.DB.prepare(
-          `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
-           FROM stops
-           ORDER BY stop_order ASC`
-        ).all()
-        return new Response(JSON.stringify(results ?? []), {
+      // GET /auth/login: always return HTML, never throw, no env/crypto
+      if (url.pathname === '/auth/login' && request.method === 'GET') {
+        const returnTo = url.searchParams.get('returnTo') || '/'
+        return new Response(loginPageHtml(returnTo, null), {
           status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=60',
-          },
-        })
-      } catch (err) {
-        console.error('[api/stops]', err)
-        return new Response(JSON.stringify({ error: 'Failed to fetch stops' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
         })
       }
-    }
 
-    // --- Admin API (session cookie auth) ---
+      // --- Admin API (session cookie auth); skip site gate ---
     if (url.pathname.startsWith('/api/admin/')) {
       const isLogin = url.pathname === '/api/admin/login' && request.method === 'POST'
 
@@ -478,25 +498,17 @@ export default {
       return jsonResponse({ error: 'Not Found' }, 404)
     }
 
-    // --- Site auth routes (no site gate) ---
-    if (url.pathname === '/auth/login') {
-      if (request.method === 'GET') {
-        const returnTo = url.searchParams.get('returnTo') || '/'
-        return new Response(loginPageHtml(returnTo, null), {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        })
-      }
-      if (request.method === 'POST') {
-        if (!env.SITE_PASSWORD) {
-          return new Response(loginPageHtml('/', 'Site password not configured.'), {
-            status: 500,
-            headers: { 'Content-Type': 'text/html; charset=utf-8' },
-          })
+      // POST /auth/login and /auth/logout (GET /auth/login already handled above)
+      if (url.pathname === '/auth/login' && request.method === 'POST') {
+        const SITE_PASSWORD = env.SITE_PASSWORD
+        const SITE_AUTH_SECRET = env.SITE_AUTH_SECRET
+        if (!SITE_PASSWORD || !SITE_AUTH_SECRET) {
+          console.error('[auth] missing SITE_PASSWORD or SITE_AUTH_SECRET')
+          return new Response('Missing SITE_PASSWORD or SITE_AUTH_SECRET', { status: 500 })
         }
         let password = ''
         let returnTo = '/'
-        const ct = request.headers.get('Content-Type') || ''
+        const ct = (request.headers.get('Content-Type') || '').toLowerCase()
         if (ct.includes('application/json')) {
           try {
             const body = await request.json()
@@ -515,78 +527,103 @@ export default {
           returnTo = params.get('returnTo') || '/'
         }
         const safeReturn = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
-        if (!timingSafeEqual(password, env.SITE_PASSWORD)) {
+        if (!timingSafeEqual(password, SITE_PASSWORD)) {
           return new Response(loginPageHtml(safeReturn, 'Invalid password'), {
             status: 401,
             headers: { 'Content-Type': 'text/html; charset=utf-8' },
           })
         }
-        const token = await signSiteToken(env)
+        const iat = Math.floor(Date.now() / 1000)
+        const exp = iat + SITE_AUTH_MAX_AGE_SEC_NUM
+        let token
+        try {
+          token = await signToken(SITE_AUTH_SECRET, { iat, exp })
+        } catch (e) {
+          console.error('[auth] signToken failed', e)
+          return new Response('Worker error. Check logs.', { status: 500 })
+        }
+        const dest = new URL(safeReturn, url.origin)
         return new Response(null, {
           status: 302,
           headers: {
-            Location: safeReturn,
+            Location: dest.toString(),
             'Set-Cookie': siteAuthCookieHeader(token, request),
           },
         })
       }
-    }
-    if (url.pathname === '/auth/logout' && (request.method === 'POST' || request.method === 'GET')) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: '/auth/login',
-          'Set-Cookie': clearSiteAuthCookie(request),
-        },
-      })
-    }
-
-    // Skip site gate: /admin (frontend SPA; /api/admin/* already handled above)
-    if (url.pathname.startsWith('/admin')) {
-      return env.ASSETS.fetch(request)
-    }
-
-    // Site gate: require valid site_auth cookie for all other routes
-    const siteCookie = getSiteAuthCookie(request)
-    const siteValid = siteCookie && (await verifySiteToken(env, siteCookie))
-    if (!siteValid) {
-      if (url.pathname.startsWith('/api/')) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-      const returnTo = url.pathname + url.search
-      return new Response(loginPageHtml(returnTo || '/', null), {
-        status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-      })
-    }
-
-    // Gated: GET /api/stops
-    if (request.method === 'GET' && url.pathname === '/api/stops') {
-      try {
-        const { results } = await env.DB.prepare(
-          `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
-           FROM stops
-           ORDER BY stop_order ASC`
-        ).all()
-        return new Response(JSON.stringify(results ?? []), {
-          status: 200,
+      if (url.pathname === '/auth/logout' && (request.method === 'POST' || request.method === 'GET')) {
+        const dest = new URL('/auth/login', url.origin)
+        return new Response(null, {
+          status: 302,
           headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=60',
+            Location: dest.toString(),
+            'Set-Cookie': clearSiteAuthCookie(request),
           },
         })
-      } catch (err) {
-        console.error('[api/stops]', err)
-        return new Response(JSON.stringify({ error: 'Failed to fetch stops' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
+      }
+
+      // Skip site gate: /admin (frontend SPA; /api/admin/* already handled above)
+      if (url.pathname.startsWith('/admin')) {
+        return env.ASSETS.fetch(request)
+      }
+
+      // Site gate: require valid site_auth cookie (skip /auth/login, /auth/logout, /admin, /api/admin)
+      const SITE_AUTH_SECRET = env.SITE_AUTH_SECRET
+      if (!SITE_AUTH_SECRET) {
+        console.error('[auth] missing SITE_AUTH_SECRET for site gate')
+        return new Response('Missing SITE_AUTH_SECRET', { status: 500 })
+      }
+      const siteCookie = getSiteAuthCookie(request)
+      let siteValid = false
+      if (siteCookie) {
+        const payload = await verifyToken(SITE_AUTH_SECRET, siteCookie)
+        const now = Math.floor(Date.now() / 1000)
+        if (payload && typeof payload.exp === 'number' && payload.exp > now) {
+          siteValid = true
+        }
+      }
+      if (!siteValid) {
+        if (url.pathname.startsWith('/api/')) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        const returnTo = url.pathname + url.search
+        return new Response(loginPageHtml(returnTo || '/', null), {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
         })
       }
-    }
 
-    return env.ASSETS.fetch(request)
+      // Gated: GET /api/stops
+      if (request.method === 'GET' && url.pathname === '/api/stops') {
+        try {
+          const { results } = await env.DB.prepare(
+            `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+             FROM stops
+             ORDER BY stop_order ASC`
+          ).all()
+          return new Response(JSON.stringify(results ?? []), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=60',
+            },
+          })
+        } catch (err) {
+          console.error('[api/stops]', err)
+          return new Response(JSON.stringify({ error: 'Failed to fetch stops' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+      }
+
+      return env.ASSETS.fetch(request)
+    } catch (err) {
+      console.error('[auth] fatal', err)
+      return new Response('Worker error. Check logs.', { status: 500 })
+    }
   },
 }
