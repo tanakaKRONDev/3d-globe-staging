@@ -66,12 +66,13 @@
 
 .admin-page__content {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) 480px;
+  gap: 18px;
   align-items: start;
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .admin-page__content {
     grid-template-columns: 1fr;
   }
@@ -104,10 +105,13 @@
   gap: var(--space-4);
 }
 
+/* Replaced by .adminFormGrid for editor form; keep for any other form */
 .admin-page__form--grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-page__label {
@@ -277,7 +281,25 @@
   min-width: 0;
 }
 
+/* Right panel: use full width, no phantom column or gutter */
 .admin-page__form-section {
   position: sticky;
   top: var(--space-6);
+  width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Form grid: 2 columns, full panel width */
+.adminFormGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.adminFormGrid .span2 {
+  grid-column: 1 / -1;
 }

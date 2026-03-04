@@ -313,9 +313,9 @@ export function AdminPage() {
               <h2 className="admin-page__subtitle">
                 {editingNew ? 'New stop' : `Edit: ${selectedStop.city} – ${selectedStop.venue}`}
               </h2>
-              <form onSubmit={handleSave} className="admin-page__form admin-page__form--grid">
+              <form onSubmit={handleSave} className="admin-page__form adminFormGrid">
                 {editingNew && (
-                  <label className="admin-page__label admin-page__label--full">
+                  <label className="admin-page__label span2">
                     ID
                     <input
                       type="text"
@@ -353,7 +353,7 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
-                <label className="admin-page__label admin-page__label--full">
+                <label className="admin-page__label span2">
                   Venue
                   <input
                     type="text"
@@ -362,7 +362,7 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
-                <label className="admin-page__label admin-page__label--full">
+                <label className="admin-page__label span2">
                   Address
                   <input
                     type="text"
@@ -391,7 +391,7 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
-                <label className="admin-page__label admin-page__label--full">
+                <label className="admin-page__label span2">
                   Timeline
                   <input
                     type="text"
@@ -400,7 +400,7 @@ export function AdminPage() {
                     className="admin-page__input"
                   />
                 </label>
-                <label className="admin-page__label admin-page__label--full">
+                <label className="admin-page__label span2">
                   Notes
                   <textarea
                     value={selectedStop.notes ?? ''}
@@ -410,9 +410,9 @@ export function AdminPage() {
                   />
                 </label>
                 {saveError && (
-                  <p className="admin-page__error admin-page__label--full">{saveError}</p>
+                  <p className="admin-page__error span2">{saveError}</p>
                 )}
-                <div className="admin-page__form-actions admin-page__label--full">
+                <div className="admin-page__form-actions span2">
                   <button type="submit" className="admin-page__btn admin-page__btn--primary" disabled={saving}>
                     {saving ? 'Saving…' : 'Save'}
                   </button>
