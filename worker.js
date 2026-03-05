@@ -77,11 +77,16 @@ function getAdminSessionCookie(request) {
   return match ? decodeURIComponent(match[1].trim()) : null
 }
 
+/** Set admin_session cookie. Do NOT set Domain so it works on both *.workers.dev and production. */
 function sessionCookieHeader(value, request) {
   const isSecure = new URL(request.url).protocol === 'https:'
-  let s = `${ADMIN_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SESSION_MAX_AGE_SEC}; SameSite=Lax`
-  if (isSecure) s += '; Secure'
-  return s
+  const s = `${ADMIN_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SEC}`
+  return isSecure ? s : s.replace('; Secure', '')
+}
+
+/** Clear admin_session cookie (for logout). */
+function clearAdminSessionCookie() {
+  return `${ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`
 }
 
 // --- Site auth: WebCrypto-only cookie signing (no Node APIs) ---
@@ -380,6 +385,16 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'Set-Cookie': sessionCookieHeader(token, request),
+          },
+        })
+      }
+
+      if (url.pathname === '/api/admin/logout' && (request.method === 'POST' || request.method === 'GET')) {
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': clearAdminSessionCookie(),
           },
         })
       }

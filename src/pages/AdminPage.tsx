@@ -25,10 +25,17 @@ export interface AdminStop {
 }
 
 const API = '/api/admin'
-const cred = (): RequestInit => ({ credentials: 'include' as RequestCredentials })
 
-async function adminFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API}${path}`, { ...cred(), ...options })
+async function adminFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers)
+  if (options.body != null && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    credentials: 'include',
+    headers,
+  })
   return res
 }
 
@@ -36,12 +43,15 @@ export function AdminPage() {
   useBodyClass('mode-admin')
   const [authChecked, setAuthChecked] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
+  const [authRequired, setAuthRequired] = useState(false)
+  const [loadingStops, setLoadingStops] = useState(true)
   const [stops, setStops] = useState<AdminStop[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStop, setSelectedStop] = useState<AdminStop | null>(null)
   const [editingNew, setEditingNew] = useState(false)
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [loggingIn, setLoggingIn] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -60,30 +70,42 @@ export function AdminPage() {
 
   const fetchStops = useCallback(async () => {
     setLoadError(null)
-    const res = await adminFetch('/stops')
-    if (res.status === 401) {
-      setAuthenticated(false)
-      setStops([])
+    try {
+      const res = await adminFetch('/stops')
+      if (res.status === 401) {
+        setAuthenticated(false)
+        setAuthRequired(true)
+        setStops([])
+        setAuthChecked(true)
+        setLoadingStops(false)
+        return
+      }
+      if (!res.ok) {
+        setLoadError('Failed to load stops')
+        setAuthChecked(true)
+        setLoadingStops(false)
+        return
+      }
+      const data = (await res.json()) as AdminStop[]
+      const normalized = (Array.isArray(data) ? data : []).map((s) => ({
+        ...s,
+        country: normalizeCountry(s.country || ''),
+      }))
+      setStops(normalized)
+      setAuthenticated(true)
+      setAuthRequired(false)
       setAuthChecked(true)
-      return
-    }
-    if (!res.ok) {
+      const verRes = await adminFetch('/versions')
+      if (verRes.ok) {
+        const verData = (await verRes.json()) as Array<{ id: string; created_at: string }>
+        setVersions(Array.isArray(verData) ? verData : [])
+      }
+    } catch {
       setLoadError('Failed to load stops')
+      setAuthRequired(true)
       setAuthChecked(true)
-      return
-    }
-    const data = (await res.json()) as AdminStop[]
-    const normalized = (Array.isArray(data) ? data : []).map((s) => ({
-      ...s,
-      country: normalizeCountry(s.country || ''),
-    }))
-    setStops(normalized)
-    setAuthenticated(true)
-    setAuthChecked(true)
-    const verRes = await adminFetch('/versions')
-    if (verRes.ok) {
-      const verData = (await verRes.json()) as Array<{ id: string; created_at: string }>
-      setVersions(Array.isArray(verData) ? verData : [])
+    } finally {
+      setLoadingStops(false)
     }
   }, [])
 
@@ -94,22 +116,26 @@ export function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoginError(null)
-    const res = await fetch(`${API}/login`, {
-      method: 'POST',
-      ...cred(),
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: loginPassword }),
-    })
-    if (res.status === 401) {
-      setLoginError('Invalid password')
-      return
+    setLoggingIn(true)
+    try {
+      const res = await adminFetch('/login', {
+        method: 'POST',
+        body: JSON.stringify({ password: loginPassword }),
+      })
+      if (res.status === 401) {
+        setLoginError('Invalid password')
+        return
+      }
+      if (!res.ok) {
+        setLoginError('Login failed')
+        return
+      }
+      setLoginPassword('')
+      setLoadingStops(true)
+      await fetchStops()
+    } finally {
+      setLoggingIn(false)
     }
-    if (!res.ok) {
-      setLoginError('Login failed')
-      return
-    }
-    setLoginPassword('')
-    await fetchStops()
   }
 
   const sortedStops = useMemo(
@@ -599,9 +625,14 @@ export function AdminPage() {
                 autoFocus
               />
             </label>
-            <button type="submit" className="auth-btn">
-              Sign in
+            <button type="submit" className="auth-btn" disabled={loggingIn}>
+              {loggingIn ? 'Signing in…' : 'Sign in'}
             </button>
+            {loggingIn && (
+              <p className="admin-page__muted" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
+                Loading stops…
+              </p>
+            )}
           </form>
         </AuthCard>
       </AuthShell>
