@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom'
 import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
-import { AuthShell } from '../components/auth/AuthShell'
-import { AuthCard } from '../components/auth/AuthCard'
 import { AddressInput } from '../components/admin/AddressInput'
+import { AdminLogin } from '../components/admin/AdminLogin'
 import { CountryComboBox } from '../components/admin/CountryComboBox'
 import { getCountryName, normalizeCountry } from '../lib/geo/countries'
 import './AdminPage.css'
@@ -39,19 +38,38 @@ async function adminFetch(path: string, options: RequestInit = {}): Promise<Resp
   return res
 }
 
+/** Load stops; does NOT throw. Returns { status, data?, error? }. */
+async function loadStopsApi(): Promise<{
+  status: number
+  data?: AdminStop[]
+  error?: string
+}> {
+  try {
+    const res = await adminFetch('/stops')
+    if (res.status === 401) {
+      return { status: 401 }
+    }
+    if (!res.ok) {
+      return { status: res.status, error: 'Failed to load stops' }
+    }
+    const data = (await res.json()) as AdminStop[]
+    return { status: 200, data: Array.isArray(data) ? data : [] }
+  } catch {
+    return { status: 500, error: 'Failed to load stops' }
+  }
+}
+
+type AuthState = 'unknown' | 'required' | 'ok'
+type ViewState = 'loading' | 'ready' | 'error'
+
 export function AdminPage() {
   useBodyClass('mode-admin')
-  const [authChecked, setAuthChecked] = useState(false)
-  const [authenticated, setAuthenticated] = useState(false)
-  const [authRequired, setAuthRequired] = useState(false)
-  const [loadingStops, setLoadingStops] = useState(true)
+  const [authState, setAuthState] = useState<AuthState>('unknown')
+  const [viewState, setViewState] = useState<ViewState>('loading')
   const [stops, setStops] = useState<AdminStop[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStop, setSelectedStop] = useState<AdminStop | null>(null)
   const [editingNew, setEditingNew] = useState(false)
-  const [loginPassword, setLoginPassword] = useState('')
-  const [loginError, setLoginError] = useState<string | null>(null)
-  const [loggingIn, setLoggingIn] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -70,73 +88,94 @@ export function AdminPage() {
 
   const fetchStops = useCallback(async () => {
     setLoadError(null)
+    const result = await loadStopsApi()
+    if (result.status === 401) {
+      setAuthState('required')
+      setStops([])
+      setViewState('ready')
+      return
+    }
+    if (result.status !== 200 || result.data == null) {
+      setViewState('error')
+      setLoadError(result.error ?? 'Failed to load stops')
+      return
+    }
+    const normalized = result.data.map((s) => ({
+      ...s,
+      country: normalizeCountry(s.country || ''),
+    }))
+    setStops(normalized)
+    setAuthState('ok')
+    setViewState('ready')
     try {
-      const res = await adminFetch('/stops')
-      if (res.status === 401) {
-        setAuthenticated(false)
-        setAuthRequired(true)
-        setStops([])
-        setAuthChecked(true)
-        setLoadingStops(false)
-        return
-      }
-      if (!res.ok) {
-        setLoadError('Failed to load stops')
-        setAuthChecked(true)
-        setLoadingStops(false)
-        return
-      }
-      const data = (await res.json()) as AdminStop[]
-      const normalized = (Array.isArray(data) ? data : []).map((s) => ({
-        ...s,
-        country: normalizeCountry(s.country || ''),
-      }))
-      setStops(normalized)
-      setAuthenticated(true)
-      setAuthRequired(false)
-      setAuthChecked(true)
       const verRes = await adminFetch('/versions')
       if (verRes.ok) {
         const verData = (await verRes.json()) as Array<{ id: string; created_at: string }>
         setVersions(Array.isArray(verData) ? verData : [])
       }
     } catch {
-      setLoadError('Failed to load stops')
-      setAuthRequired(true)
-      setAuthChecked(true)
-    } finally {
-      setLoadingStops(false)
+      // non-fatal
     }
   }, [])
 
   useEffect(() => {
-    fetchStops()
-  }, [fetchStops])
+    loadStopsApi().then((result) => {
+      if (result.status === 401) {
+        setAuthState('required')
+        setStops([])
+        setViewState('ready')
+        return
+      }
+      if (result.status !== 200 || result.data == null) {
+        setViewState('error')
+        setLoadError(result.error ?? 'Failed to load stops')
+        return
+      }
+      const normalized = result.data.map((s) => ({
+        ...s,
+        country: normalizeCountry(s.country || ''),
+      }))
+      setStops(normalized)
+      setAuthState('ok')
+      setViewState('ready')
+      adminFetch('/versions')
+        .then((verRes) => (verRes.ok ? verRes.json() : null))
+        .then((verData) => {
+          if (Array.isArray(verData)) setVersions(verData)
+        })
+        .catch(() => {})
+    })
+  }, [])
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginError(null)
-    setLoggingIn(true)
-    try {
-      const res = await adminFetch('/login', {
-        method: 'POST',
-        body: JSON.stringify({ password: loginPassword }),
-      })
-      if (res.status === 401) {
-        setLoginError('Invalid password')
+  const handleLoginSuccess = useCallback(() => {
+    setViewState('loading')
+    setAuthState('unknown')
+    loadStopsApi().then((result) => {
+      if (result.status === 401) {
+        setAuthState('required')
+        setViewState('ready')
         return
       }
-      if (!res.ok) {
-        setLoginError('Login failed')
+      if (result.status !== 200 || result.data == null) {
+        setViewState('error')
+        setLoadError(result.error ?? 'Failed to load stops')
         return
       }
-      setLoginPassword('')
-      setLoadingStops(true)
-      await fetchStops()
-    } finally {
-      setLoggingIn(false)
-    }
-  }
+      const normalized = result.data.map((s) => ({
+        ...s,
+        country: normalizeCountry(s.country || ''),
+      }))
+      setStops(normalized)
+      setAuthState('ok')
+      setViewState('ready')
+      adminFetch('/versions')
+        .then((verRes) => (verRes.ok ? verRes.json() : null))
+        .then((verData) => {
+          if (Array.isArray(verData)) setVersions(verData)
+        })
+        .catch(() => {})
+    })
+  }, [])
 
   const sortedStops = useMemo(
     () => [...stops].sort((a, b) => a.order - b.order),
@@ -264,18 +303,6 @@ export function AdminPage() {
     } catch {
       return iso
     }
-  }
-
-  if (!authChecked) {
-    return (
-      <AdminShell>
-        <div className="admin-page">
-          <div className="admin-page__card">
-            <p className="admin-page__muted">Checking session…</p>
-          </div>
-        </div>
-      </AdminShell>
-    )
   }
 
   const resolveForSave = useCallback(async (): Promise<{ address: string; lat: number; lng: number; city: string; country: string } | null> => {
@@ -609,33 +636,32 @@ export function AdminPage() {
     runReverse()
   }, [runReverse])
 
-  if (!authenticated) {
+  if (authState === 'required') {
+    return <AdminLogin onSuccess={handleLoginSuccess} />
+  }
+  if (viewState === 'loading') {
     return (
-      <AuthShell>
-        <AuthCard title="Admin" subtitle="Sign in to manage stops" error={loginError || undefined}>
-          <form onSubmit={handleLogin} className="auth-card__form">
-            <label className="auth-label">
-              Password
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                className="auth-input"
-                autoComplete="current-password"
-                autoFocus
-              />
-            </label>
-            <button type="submit" className="auth-btn" disabled={loggingIn}>
-              {loggingIn ? 'Signing in…' : 'Sign in'}
+      <AdminShell>
+        <div className="admin-page">
+          <div className="admin-page__card">
+            <p className="admin-page__muted">Checking session…</p>
+          </div>
+        </div>
+      </AdminShell>
+    )
+  }
+  if (viewState === 'error') {
+    return (
+      <AdminShell>
+        <div className="admin-page">
+          <div className="admin-page__card">
+            <p className="admin-page__error">{loadError ?? 'Failed to load'}</p>
+            <button type="button" className="admin-page__btn admin-page__btn--secondary" onClick={() => { setViewState('loading'); fetchStops() }}>
+              Retry
             </button>
-            {loggingIn && (
-              <p className="admin-page__muted" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
-                Loading stops…
-              </p>
-            )}
-          </form>
-        </AuthCard>
-      </AuthShell>
+          </div>
+        </div>
+      </AdminShell>
     )
   }
 
