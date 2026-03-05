@@ -390,6 +390,95 @@ export default {
         return adminUnauthorized()
       }
 
+      // --- Snapshot helper (keep last 20) ---
+      async function saveStopsSnapshot(env) {
+        try {
+          const { results: stops } = await env.DB.prepare(
+            `SELECT id, stop_order, city, country, venue, address, lat, lng, timeline, notes FROM stops ORDER BY stop_order ASC`
+          ).all()
+          const snapshot = JSON.stringify(stops ?? [])
+          const versionId = crypto.randomUUID()
+          await env.DB.prepare(
+            `INSERT INTO stop_versions (id, created_at, snapshot_json) VALUES (?, datetime('now'), ?)`
+          )
+            .bind(versionId, snapshot)
+            .run()
+          const { results: rows } = await env.DB.prepare(
+            `SELECT id FROM stop_versions ORDER BY created_at DESC LIMIT 20`
+          ).all()
+          const keepIds = (rows ?? []).map((r) => r.id)
+          if (keepIds.length > 0) {
+            const placeholders = keepIds.map(() => '?').join(',')
+            await env.DB.prepare(
+              `DELETE FROM stop_versions WHERE id NOT IN (${placeholders})`
+            )
+              .bind(...keepIds)
+              .run()
+          }
+        } catch (err) {
+          console.error('[saveStopsSnapshot]', err)
+        }
+      }
+
+      // --- Admin versions list ---
+      if (url.pathname === '/api/admin/versions' && request.method === 'GET') {
+        try {
+          const { results } = await env.DB.prepare(
+            `SELECT id, created_at FROM stop_versions ORDER BY created_at DESC LIMIT 20`
+          ).all()
+          return jsonResponse(results ?? [])
+        } catch (err) {
+          console.error('[api/admin/versions]', err)
+          return jsonResponse({ error: 'Failed to fetch versions' }, 500)
+        }
+      }
+
+      // --- Admin rollback ---
+      const rollbackMatch = url.pathname.match(/^\/api\/admin\/rollback\/(.+)$/)
+      if (rollbackMatch && request.method === 'POST') {
+        const versionId = decodeURIComponent(rollbackMatch[1])
+        if (!versionId) {
+          return jsonResponse({ error: 'Version id required' }, 400)
+        }
+        try {
+          const row = await env.DB.prepare(
+            `SELECT snapshot_json FROM stop_versions WHERE id = ?`
+          )
+            .bind(versionId)
+            .first()
+          if (!row || !row.snapshot_json) {
+            return jsonResponse({ error: 'Version not found' }, 404)
+          }
+          const snapshot = JSON.parse(row.snapshot_json)
+          if (!Array.isArray(snapshot)) {
+            return jsonResponse({ error: 'Invalid snapshot' }, 500)
+          }
+          await env.DB.prepare(`DELETE FROM stops`).run()
+          for (const s of snapshot) {
+            const stop_order = s.stop_order != null ? s.stop_order : s.order
+            const id = s.id
+            const city = s.city ?? ''
+            const country = s.country ?? ''
+            const venue = s.venue ?? ''
+            const address = s.address ?? ''
+            const lat = Number(s.lat)
+            const lng = Number(s.lng)
+            const timeline = s.timeline ?? null
+            const notes = s.notes ?? null
+            if (!id || !Number.isFinite(lat) || !Number.isFinite(lng)) continue
+            await env.DB.prepare(
+              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            )
+              .bind(id, stop_order, city, country, venue, address, lat, lng, timeline, notes)
+              .run()
+          }
+          return jsonResponse({ ok: true })
+        } catch (err) {
+          console.error('[api/admin/rollback]', err)
+          return jsonResponse({ error: 'Rollback failed' }, 500)
+        }
+      }
+
       // --- Admin geocode (Nominatim proxy) ---
       const NOMINATIM_USER_AGENT = 'WorldTourAdmin/1.0 (https://github.com/your-org/3d-globe-landing-page)'
       const GEO_RATE_MS = 1000
@@ -592,6 +681,7 @@ export default {
             const row = await env.DB.prepare(
               `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes FROM stops WHERE id = ?`
             ).bind(d.id).first()
+            await saveStopsSnapshot(env)
             return jsonResponse(row ?? { id: d.id, order: d.stop_order, city: d.city, country: d.country, venue: d.venue, address: d.address, lat: d.lat, lng: d.lng, timeline: d.timeline, notes: d.notes })
           } catch (err) {
             if (err && err.message && /UNIQUE|primary key/i.test(err.message)) {
@@ -599,6 +689,42 @@ export default {
             }
             console.error('[api/admin/stops POST]', err)
             return jsonResponse({ error: 'Failed to create stop' }, 500)
+          }
+        }
+
+        if (idSuffix === 'reorder' && request.method === 'PATCH') {
+          let body
+          try {
+            body = await request.json()
+          } catch {
+            return jsonResponse({ error: 'Invalid JSON' }, 400)
+          }
+          const idOrder = body.idOrder
+          if (!Array.isArray(idOrder) || idOrder.length === 0) {
+            return jsonResponse({ error: 'idOrder must be a non-empty array of stop ids' }, 400)
+          }
+          const ids = idOrder.map((x) => String(x).trim()).filter(Boolean)
+          if (ids.length !== idOrder.length) {
+            return jsonResponse({ error: 'Each id in idOrder must be non-empty' }, 400)
+          }
+          try {
+            const { results: existing } = await env.DB.prepare('SELECT id FROM stops').all()
+            const existingIds = new Set((existing || []).map((r) => r.id))
+            if (ids.length !== existingIds.size || ids.some((id) => !existingIds.has(id))) {
+              return jsonResponse({ error: 'idOrder must contain exactly all stop ids, each once' }, 400)
+            }
+            for (let i = 0; i < ids.length; i++) {
+              await env.DB.prepare(
+                `UPDATE stops SET stop_order = ?, updated_at = datetime('now') WHERE id = ?`
+              )
+                .bind(i + 1, ids[i])
+                .run()
+            }
+            await saveStopsSnapshot(env)
+            return jsonResponse({ ok: true })
+          } catch (err) {
+            console.error('[api/admin/stops reorder]', err)
+            return jsonResponse({ error: 'Failed to reorder stops' }, 500)
           }
         }
 
@@ -622,6 +748,7 @@ export default {
             const row = await env.DB.prepare(
               `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes FROM stops WHERE id = ?`
             ).bind(id).first()
+            await saveStopsSnapshot(env)
             return jsonResponse(row)
           } catch (err) {
             console.error('[api/admin/stops PUT]', err)
@@ -635,6 +762,7 @@ export default {
             if (info.meta.changes === 0) {
               return jsonResponse({ error: 'Stop not found' }, 404)
             }
+            await saveStopsSnapshot(env)
             return jsonResponse({ ok: true })
           } catch (err) {
             console.error('[api/admin/stops DELETE]', err)
