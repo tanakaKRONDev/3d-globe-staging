@@ -37,31 +37,127 @@
   }
 }
 
-.admin-page__header {
+/* Top action bar */
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
   margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
-.admin-page__back {
+.admin-topbar__left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.admin-topbar__back {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   color: var(--text-secondary);
   text-decoration: none;
   font-size: var(--font-size-sm);
-  margin-bottom: var(--space-3);
   transition: color var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.admin-page__back:hover {
+.admin-topbar__back:hover {
   color: var(--accent);
 }
 
-.admin-page__title {
+.admin-topbar__title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-tight);
   margin: 0;
   color: var(--text);
+}
+
+.admin-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.admin-topbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.admin-topbar__btn--primary {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.admin-topbar__btn--primary:hover {
+  background: var(--accent-muted);
+  border-color: var(--accent-muted);
+}
+
+.admin-topbar__btn--secondary {
+  background: var(--panel-active);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.admin-topbar__btn--secondary:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+/* Rollback modal overlay */
+.admin-page__rollback-modal {
+  z-index: var(--z-modal);
+}
+
+.admin-page__rollback-modal[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.admin-page__rollback-modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.admin-page__rollback-dialog {
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: auto;
+  margin: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-glass);
+}
+
+.admin-page__rollback-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
 }
 
 .admin-page__subtitle {
@@ -325,7 +421,7 @@
 
 .admin-page__table tbody tr {
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
 }
 
 .admin-page__table tbody tr:hover {
@@ -338,6 +434,42 @@
 
 .admin-page__row--selected:hover {
   background: var(--panel-active);
+}
+
+/* Drag and drop: lift while dragging, smooth drop */
+.admin-page__row--dragging {
+  z-index: 1;
+  box-shadow: var(--shadow-glass);
+  opacity: 0.95;
+  background: var(--panel);
+}
+
+.admin-page__reorder-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.admin-page__drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  cursor: grab;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  user-select: none;
+  touch-action: none;
+}
+
+.admin-page__drag-handle:active {
+  cursor: grabbing;
+}
+
+.admin-page__drag-handle:hover {
+  color: var(--accent);
+  background: var(--panel-hover);
 }
 
 /* Reorder column */

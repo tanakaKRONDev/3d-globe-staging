@@ -707,36 +707,40 @@ export default {
           }
         }
 
-        if (idSuffix === 'reorder' && request.method === 'PATCH') {
+        if (idSuffix === 'reorder' && (request.method === 'POST' || request.method === 'PATCH')) {
           let body
           try {
             body = await request.json()
           } catch {
             return jsonResponse({ error: 'Invalid JSON' }, 400)
           }
-          const idOrder = body.idOrder
-          if (!Array.isArray(idOrder) || idOrder.length === 0) {
-            return jsonResponse({ error: 'idOrder must be a non-empty array of stop ids' }, 400)
+          const orderedIds = body.orderedIds ?? body.idOrder
+          if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+            return jsonResponse({ error: 'orderedIds must be a non-empty array of stop ids' }, 400)
           }
-          const ids = idOrder.map((x) => String(x).trim()).filter(Boolean)
-          if (ids.length !== idOrder.length) {
-            return jsonResponse({ error: 'Each id in idOrder must be non-empty' }, 400)
+          const ids = orderedIds.map((x) => String(x).trim()).filter(Boolean)
+          if (ids.length !== orderedIds.length) {
+            return jsonResponse({ error: 'Each id in orderedIds must be non-empty' }, 400)
           }
           try {
             const { results: existing } = await env.DB.prepare('SELECT id FROM stops').all()
             const existingIds = new Set((existing || []).map((r) => r.id))
             if (ids.length !== existingIds.size || ids.some((id) => !existingIds.has(id))) {
-              return jsonResponse({ error: 'idOrder must contain exactly all stop ids, each once' }, 400)
+              return jsonResponse({ error: 'orderedIds must contain exactly all stop ids, each once' }, 400)
             }
-            for (let i = 0; i < ids.length; i++) {
-              await env.DB.prepare(
+            const statements = ids.map((id, i) =>
+              env.DB.prepare(
                 `UPDATE stops SET stop_order = ?, updated_at = datetime('now') WHERE id = ?`
-              )
-                .bind(i + 1, ids[i])
-                .run()
-            }
+              ).bind(i + 1, id)
+            )
+            await env.DB.batch(statements)
             await saveStopsSnapshot(env)
-            return jsonResponse({ ok: true })
+            const { results: stops } = await env.DB.prepare(
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+               FROM stops
+               ORDER BY stop_order ASC`
+            ).all()
+            return jsonResponse(stops ?? [])
           } catch (err) {
             console.error('[api/admin/stops reorder]', err)
             return jsonResponse({ error: 'Failed to reorder stops' }, 500)

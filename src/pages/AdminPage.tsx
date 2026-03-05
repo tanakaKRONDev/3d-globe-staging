@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Plus, Trash2 } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { AddressInput } from '../components/admin/AddressInput'
 import { AdminLogin } from '../components/admin/AdminLogin'
+import { AdminTopBar } from '../components/admin/AdminTopBar'
+import { StopList } from '../components/admin/StopList'
 import { CountryComboBox } from '../components/admin/CountryComboBox'
 import { getCountryName, normalizeCountry } from '../lib/geo/countries'
 import './AdminPage.css'
@@ -64,6 +66,7 @@ type ViewState = 'loading' | 'ready' | 'error'
 
 export function AdminPage() {
   useBodyClass('mode-admin')
+  const [searchParams] = useSearchParams()
   const [authState, setAuthState] = useState<AuthState>('unknown')
   const [viewState, setViewState] = useState<ViewState>('loading')
   const [stops, setStops] = useState<AdminStop[]>([])
@@ -75,9 +78,13 @@ export function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [reordering, setReordering] = useState(false)
+  const [reorderError, setReorderError] = useState<string | null>(null)
+  const reorderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [versions, setVersions] = useState<Array<{ id: string; created_at: string }>>([])
   const [rollbackError, setRollbackError] = useState<string | null>(null)
   const [rollingBack, setRollingBack] = useState(false)
+  const [rollbackModalOpen, setRollbackModalOpen] = useState(false)
+  const rollbackModalRef = useRef<HTMLDialogElement>(null)
   const [geoCandidates, setGeoCandidates] = useState<
     Array<{ displayName: string; lat: number; lng: number; city?: string; state?: string; postcode?: string; countryCode?: string }>
   >([])
@@ -136,8 +143,14 @@ export function AdminPage() {
         country: normalizeCountry(s.country || ''),
       }))
       setStops(normalized)
+      setSelectedStop(null)
       setAuthState('ok')
       setViewState('ready')
+      const stopIdFromUrl = searchParams.get('stopId')
+      if (stopIdFromUrl) {
+        const match = normalized.find((s) => s.id === stopIdFromUrl)
+        if (match) setSelectedStop({ ...match, country: match.country })
+      }
       adminFetch('/versions')
         .then((verRes) => (verRes.ok ? verRes.json() : null))
         .then((verData) => {
@@ -166,8 +179,14 @@ export function AdminPage() {
         country: normalizeCountry(s.country || ''),
       }))
       setStops(normalized)
+      setSelectedStop(null)
       setAuthState('ok')
       setViewState('ready')
+      const stopIdFromUrl = searchParams.get('stopId')
+      if (stopIdFromUrl) {
+        const match = normalized.find((s) => s.id === stopIdFromUrl)
+        if (match) setSelectedStop({ ...match, country: match.country })
+      }
       adminFetch('/versions')
         .then((verRes) => (verRes.ok ? verRes.json() : null))
         .then((verData) => {
@@ -175,7 +194,7 @@ export function AdminPage() {
         })
         .catch(() => {})
     })
-  }, [])
+  }, [searchParams])
 
   const sortedStops = useMemo(
     () => [...stops].sort((a, b) => a.order - b.order),
@@ -208,38 +227,56 @@ export function AdminPage() {
     setSaveError(null)
   }
 
-  const selectStop = (stop: AdminStop) => {
+  const selectStop = useCallback((stop: AdminStop) => {
     setEditingNew(false)
     const country = stop.country?.trim().length ? (normalizeCountry(stop.country) || '') : (stop.country ?? '')
     setSelectedStop({ ...stop, country })
     setSaveError(null)
-  }
+  }, [])
 
-  const handleReorder = useCallback(
-    async (newIdOrder: string[]) => {
-      if (newIdOrder.length === 0) return
-      setReordering(true)
-      setLoadError(null)
+  const persistReorder = useCallback(
+    async (orderedIds: string[]) => {
       try {
         const res = await adminFetch('/stops/reorder', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idOrder: newIdOrder }),
+          method: 'POST',
+          body: JSON.stringify({ orderedIds }),
         })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
-          setLoadError((data as { error?: string }).error || 'Failed to reorder')
-          setReordering(false)
+          setReorderError((data as { error?: string }).error || 'Failed to save order')
+          await fetchStops()
           return
         }
-        await fetchStops()
+        setReorderError(null)
+        const data = (await res.json()) as AdminStop[]
+        if (Array.isArray(data)) {
+          setStops(data.map((s) => ({ ...s, country: normalizeCountry(s.country || '') })))
+        }
       } catch {
-        setLoadError('Failed to reorder')
-      } finally {
-        setReordering(false)
+        setReorderError('Failed to save order')
+        await fetchStops()
       }
     },
     [fetchStops]
+  )
+
+  const handleLocalReorder = useCallback(
+    (reorderedStops: Array<{ id: string; order: number }>) => {
+      setStops((prev) => {
+        const byId = new Map(prev.map((s) => [s.id, s]))
+        return reorderedStops.map((r, i) => {
+          const existing = byId.get(r.id)
+          return existing ? { ...existing, order: i } : ({ ...r, order: i } as AdminStop)
+        })
+      })
+      const orderedIds = reorderedStops.map((r) => r.id)
+      if (reorderTimeoutRef.current) clearTimeout(reorderTimeoutRef.current)
+      reorderTimeoutRef.current = setTimeout(() => {
+        reorderTimeoutRef.current = null
+        persistReorder(orderedIds)
+      }, 200)
+    },
+    [persistReorder]
   )
 
   const handleMoveUp = useCallback(
@@ -248,9 +285,9 @@ export function AdminPage() {
       if (idx <= 0) return
       const next = [...sortedStops]
       ;[next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]
-      handleReorder(next.map((s) => s.id))
+      handleLocalReorder(next.map((s, i) => ({ ...s, order: i })))
     },
-    [sortedStops, handleReorder]
+    [sortedStops, handleLocalReorder]
   )
 
   const handleMoveDown = useCallback(
@@ -259,9 +296,9 @@ export function AdminPage() {
       if (idx < 0 || idx >= sortedStops.length - 1) return
       const next = [...sortedStops]
       ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
-      handleReorder(next.map((s) => s.id))
+      handleLocalReorder(next.map((s, i) => ({ ...s, order: i })))
     },
-    [sortedStops, handleReorder]
+    [sortedStops, handleLocalReorder]
   )
 
   const clearSelection = () => {
@@ -287,6 +324,7 @@ export function AdminPage() {
         }
         await fetchStops()
         clearSelection()
+        setRollbackModalOpen(false)
       } catch {
         setRollbackError('Rollback failed')
       } finally {
@@ -295,6 +333,25 @@ export function AdminPage() {
     },
     [fetchStops, clearSelection]
   )
+
+  useEffect(() => {
+    const dialog = rollbackModalRef.current
+    if (!dialog) return
+    if (rollbackModalOpen) dialog.showModal()
+    else dialog.close()
+  }, [rollbackModalOpen])
+
+  useEffect(() => {
+    return () => {
+      if (reorderTimeoutRef.current) clearTimeout(reorderTimeoutRef.current)
+    }
+  }, [])
+
+  const handleLogout = useCallback(() => {
+    fetch(`${API}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
+      setAuthState('required')
+    })
+  }, [])
 
   function formatVersionDate(iso: string) {
     try {
@@ -668,12 +725,56 @@ export function AdminPage() {
   return (
     <AdminShell>
       <div className="admin-page">
-        <header className="admin-page__header">
-        <Link to="/" className="admin-page__back">
-          <ArrowLeft size={20} /> Back to site
-        </Link>
-        <h1 className="admin-page__title">Admin – Stops</h1>
-      </header>
+        <AdminTopBar
+          title="Admin – Stops"
+          onRollbackClick={() => setRollbackModalOpen(true)}
+          onLogout={handleLogout}
+        />
+
+        <dialog
+          ref={rollbackModalRef}
+          className="admin-page__rollback-modal"
+          onCancel={() => setRollbackModalOpen(false)}
+          aria-labelledby="rollback-dialog-title"
+        >
+          <div className="admin-page__rollback-dialog">
+            <h2 id="rollback-dialog-title" className="admin-page__subtitle">
+              Rollback
+            </h2>
+            <p className="admin-page__muted admin-page__rollback-desc">
+              Restore a previous snapshot of all stops (last 20 saved after create/update/delete/reorder).
+            </p>
+            {rollbackError && <p className="admin-page__error">{rollbackError}</p>}
+            {versions.length === 0 ? (
+              <p className="admin-page__muted">No versions yet.</p>
+            ) : (
+              <ul className="admin-page__versions-list">
+                {versions.map((v) => (
+                  <li key={v.id} className="admin-page__versions-item">
+                    <span className="admin-page__versions-date">{formatVersionDate(v.created_at)}</span>
+                    <button
+                      type="button"
+                      className="admin-page__btn admin-page__btn--secondary admin-page__btn--sm"
+                      onClick={() => handleRollback(v.id)}
+                      disabled={rollingBack}
+                    >
+                      {rollingBack ? 'Restoring…' : 'Rollback'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="admin-page__rollback-dialog-actions">
+              <button
+                type="button"
+                className="admin-page__btn admin-page__btn--secondary"
+                onClick={() => setRollbackModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </dialog>
 
       <div className="admin-page__content">
         <section className="admin-page__card admin-page__table-section">
@@ -690,59 +791,24 @@ export function AdminPage() {
             </button>
           </div>
           {loadError && <p className="admin-page__error">{loadError}</p>}
+          {reorderError && (
+            <p className="admin-page__error admin-page__reorder-error" role="alert">
+              {reorderError} List refreshed from server.
+            </p>
+          )}
           <div className="admin-page__table-wrap">
-            <table className="admin-page__table">
-              <thead>
-                <tr>
-                  <th className="admin-page__cell-reorder"> </th>
-                  <th>Order</th>
-                  <th>City</th>
-                  <th>Country</th>
-                  <th>Venue</th>
-                  <th>Address</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStops.map((stop) => (
-                  <tr
-                    key={stop.id}
-                    onClick={() => selectStop(stop)}
-                    className={selectedStop?.id === stop.id && !editingNew ? 'admin-page__row--selected' : ''}
-                  >
-                    <td className="admin-page__cell-reorder" onClick={(e) => e.stopPropagation()}>
-                      <div className="admin-page__reorder-btns">
-                        <button
-                          type="button"
-                          className="admin-page__reorder-btn"
-                          onClick={() => handleMoveUp(stop)}
-                          disabled={reordering || sortedStops.findIndex((s) => s.id === stop.id) <= 0}
-                          title="Move up"
-                        >
-                          <ChevronUp size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-page__reorder-btn"
-                          onClick={() => handleMoveDown(stop)}
-                          disabled={
-                            reordering ||
-                            sortedStops.findIndex((s) => s.id === stop.id) >= sortedStops.length - 1
-                          }
-                          title="Move down"
-                        >
-                          <ChevronDown size={16} />
-                        </button>
-                      </div>
-                    </td>
-                    <td>{stop.order}</td>
-                    <td>{stop.city}</td>
-                    <td>{getCountryName(stop.country) || stop.country}</td>
-                    <td>{stop.venue}</td>
-                    <td className="admin-page__cell-address">{stop.address}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <StopList
+              stops={searchQuery.trim() ? filteredStops : sortedStops}
+              sortableIds={searchQuery.trim() ? null : sortedStops.map((s) => s.id)}
+              selectedStopId={selectedStop?.id ?? null}
+              editingNew={editingNew}
+              getCountryName={getCountryName}
+              onSelectStop={selectStop}
+              onLocalReorder={handleLocalReorder}
+              onMoveUp={handleMoveUp}
+              onMoveDown={handleMoveDown}
+              reordering={reordering}
+            />
           </div>
         </section>
 
@@ -926,34 +992,7 @@ export function AdminPage() {
               </form>
             </>
           ) : (
-            <p className="admin-page__muted">Select a stop from the table or click “Add stop” to create one.</p>
-          )}
-        </section>
-
-        <section className="admin-page__card admin-page__rollback-section">
-          <h2 className="admin-page__subtitle">Rollback</h2>
-          <p className="admin-page__muted admin-page__rollback-desc">
-            Restore a previous snapshot of all stops (last 20 saved after create/update/delete/reorder).
-          </p>
-          {rollbackError && <p className="admin-page__error">{rollbackError}</p>}
-          {versions.length === 0 ? (
-            <p className="admin-page__muted">No versions yet.</p>
-          ) : (
-            <ul className="admin-page__versions-list">
-              {versions.map((v) => (
-                <li key={v.id} className="admin-page__versions-item">
-                  <span className="admin-page__versions-date">{formatVersionDate(v.created_at)}</span>
-                  <button
-                    type="button"
-                    className="admin-page__btn admin-page__btn--secondary admin-page__btn--sm"
-                    onClick={() => handleRollback(v.id)}
-                    disabled={rollingBack}
-                  >
-                    {rollingBack ? 'Restoring…' : 'Rollback'}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <p className="admin-page__muted">Select a stop to edit.</p>
           )}
         </section>
       </div>
