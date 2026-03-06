@@ -582,14 +582,20 @@ export default {
 
       // --- Admin access logs (default last 24h, include block_scope from ip_blocks, newest first) ---
       if (url.pathname === '/api/admin/logs' && request.method === 'GET') {
-        const parsed = parseLogsTimeRange(url.searchParams)
-        if (!parsed.ok) {
-          return jsonResponse({ error: 'Invalid time range' }, 400)
-        }
-        const { fromMs, toMs } = parsed
-        const fromStr = msToSqliteDatetime(fromMs)
-        const toStr = msToSqliteDatetime(toMs)
         try {
+          if (!env.DB) {
+            return jsonResponse(
+              { error: 'DB binding missing. Check wrangler.toml env.staging.d1_databases binding=DB' },
+              500
+            )
+          }
+          const parsed = parseLogsTimeRange(url.searchParams)
+          if (!parsed.ok) {
+            return jsonResponse({ error: 'Invalid time range' }, 400)
+          }
+          const { fromMs, toMs } = parsed
+          const fromStr = msToSqliteDatetime(fromMs)
+          const toStr = msToSqliteDatetime(toMs)
           const query = `SELECT l.created_at AS timestamp, l.ip, l.country, l.region, l.city, l.user_agent AS userAgent, l.path, b.scope AS block_scope
             FROM access_logs l
             LEFT JOIN ip_blocks b ON l.ip = b.ip
@@ -603,12 +609,18 @@ export default {
           }))
           return jsonResponse({ logs })
         } catch (err) {
+          console.error('[api/admin/logs]', err)
           const msg = err && err.message ? String(err.message) : ''
           if (/no such table:\s*access_logs/i.test(msg)) {
-            return jsonResponse({ error: 'access_logs table missing: run D1 migrations' }, 500)
+            return jsonResponse(
+              { error: 'access_logs table missing. Run: wrangler d1 migrations apply <DB_NAME> --env staging' },
+              500
+            )
           }
-          console.error('[api/admin/logs]', err)
-          return jsonResponse({ error: 'Failed to fetch logs' }, 500)
+          return jsonResponse(
+            { error: 'logs query failed', details: msg || (err != null ? String(err) : 'unknown') },
+            500
+          )
         }
       }
 
