@@ -17,8 +17,8 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "db"
-database_id = "ab55959b-9283-4377-9afc-346231547873"
-# database_id = "976cf376-3db0-4c28-b05a-493c8a89406f"
+# database_id = "ab55959b-9283-4377-9afc-346231547873"
+database_id = "976cf376-3db0-4c28-b05a-493c8a89406f"
 migrations_dir = "migrations"
 
 # -------------------------
