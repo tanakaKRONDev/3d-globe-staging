@@ -1,0 +1,65 @@
+/* Reusable modal – matches admin theme (tokens) */
+
+.ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: var(--space-4);
+  font-family: var(--font-sans);
+}
+
+.ui-modal-dialog {
+  background: var(--panel);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 90vw;
+  box-shadow: var(--shadow-glass);
+  outline: none;
+}
+
+.ui-modal-dialog--sm {
+  max-width: 360px;
+}
+
+.ui-modal-dialog--md {
+  max-width: 420px;
+}
+
+.ui-modal-dialog--lg {
+  max-width: 520px;
+}
+
+.ui-modal-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.ui-modal-body {
+  margin-bottom: var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.ui-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.ui-modal-error {
+  color: rgba(239, 68, 68, 0.95);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-3);
+}

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Download, ShieldOff, Shield } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
-import { UnblockIpModal } from '../components/admin/UnblockIpModal'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { ChoiceModal } from '../components/ui/ChoiceModal'
 import './AdminPage.css'
 
 const API = '/api/admin'
@@ -80,8 +81,10 @@ export function AdminLogsPage() {
   const [error, setError] = useState<string | null>(null)
   const [from, setFrom] = useState(() => defaultFrom())
   const [to, setTo] = useState(() => defaultTo())
-  const [blockModalIp, setBlockModalIp] = useState<string | null>(null)
-  const [unblockModal, setUnblockModal] = useState<{ ip: string; scope: 'admin' | 'all' } | null>(null)
+  const [blockChoiceIp, setBlockChoiceIp] = useState<string | null>(null)
+  const [unblockConfirmIp, setUnblockConfirmIp] = useState<string | null>(null)
+  const [unblockChoiceIp, setUnblockChoiceIp] = useState<string | null>(null)
+  const [modalError, setModalError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [currentUserIp, setCurrentUserIp] = useState<string | null>(null)
 
@@ -116,6 +119,7 @@ export function AdminLogsPage() {
 
   const handleBlock = useCallback(
     async (ip: string, scope: 'admin' | 'all') => {
+      setModalError(null)
       setActionLoading(true)
       try {
         const res = await adminFetch('/blocks', {
@@ -124,14 +128,14 @@ export function AdminLogsPage() {
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) {
-          setError((data as { error?: string }).error || 'Failed to block')
+          setModalError((data as { error?: string }).error || 'Failed to block')
           return
         }
-        setBlockModalIp(null)
+        setBlockChoiceIp(null)
         setError(null)
         await load()
       } catch {
-        setError('Failed to block')
+        setModalError('Failed to block')
       } finally {
         setActionLoading(false)
       }
@@ -140,14 +144,15 @@ export function AdminLogsPage() {
   )
 
   const handleUnblockConfirm = useCallback(
-    async (ip: string, scope: 'admin' | 'all', action: 'delete' | 'downgrade') => {
+    async (ip: string, _scope: 'admin' | 'all', action: 'delete' | 'downgrade') => {
+      setModalError(null)
       setActionLoading(true)
       try {
         if (action === 'delete') {
           const res = await adminFetch(`/blocks/${encodeURIComponent(ip)}`, { method: 'DELETE' })
           if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            setError((data as { error?: string }).error || 'Failed to unblock')
+            setModalError((data as { error?: string }).error || 'Failed to unblock')
             return
           }
         } else {
@@ -157,15 +162,16 @@ export function AdminLogsPage() {
           })
           if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            setError((data as { error?: string }).error || 'Failed to update block')
+            setModalError((data as { error?: string }).error || 'Failed to update block')
             return
           }
         }
-        setUnblockModal(null)
+        setUnblockConfirmIp(null)
+        setUnblockChoiceIp(null)
         setError(null)
         await load()
       } catch {
-        setError('Failed to unblock')
+        setModalError('Failed to unblock')
       } finally {
         setActionLoading(false)
       }
@@ -280,12 +286,11 @@ export function AdminLogsPage() {
                               type="button"
                               className="admin-page__btn admin-page__btn--secondary admin-page__btn--sm"
                               onClick={() => {
+                                setModalError(null)
                                 if (row.block_scope === 'admin') {
-                                  if (confirm('Unblock Admin Access?')) {
-                                    handleUnblockConfirm(row.ip, 'admin', 'delete')
-                                  }
+                                  setUnblockConfirmIp(row.ip)
                                 } else {
-                                  setUnblockModal({ ip: row.ip, scope: 'all' })
+                                  setUnblockChoiceIp(row.ip)
                                 }
                               }}
                               disabled={actionLoading}
@@ -296,7 +301,10 @@ export function AdminLogsPage() {
                             <button
                               type="button"
                               className="admin-page__btn admin-page__btn--secondary admin-page__btn--sm"
-                              onClick={() => setBlockModalIp(row.ip)}
+                              onClick={() => {
+                                setModalError(null)
+                                setBlockChoiceIp(row.ip)
+                              }}
                               disabled={actionLoading}
                             >
                               <Shield size={14} /> Block
@@ -312,60 +320,87 @@ export function AdminLogsPage() {
           </div>
         </section>
 
-        {/* Block IP modal */}
-        {blockModalIp != null && (
-          <div className="admin-logs__modal-backdrop" onClick={() => !actionLoading && setBlockModalIp(null)}>
-            <div
-              className="admin-logs__modal"
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-labelledby="block-modal-title"
-            >
-              <h2 id="block-modal-title" className="admin-page__subtitle">
-                Block IP
-              </h2>
-              <p className="admin-page__muted">{blockModalIp}</p>
-              {currentUserIp != null && blockModalIp === currentUserIp && (
-                <p className="admin-page__error admin-logs__modal-warning" role="alert">
-                  You cannot block your current IP.
-                </p>
-              )}
-              <div className="admin-logs__modal-actions">
-                <button
-                  type="button"
-                  className="admin-page__btn admin-page__btn--secondary"
-                  onClick={() => handleBlock(blockModalIp, 'admin')}
-                  disabled={actionLoading || (currentUserIp != null && blockModalIp === currentUserIp)}
-                >
-                  Block Admin Access
-                </button>
-                <button
-                  type="button"
-                  className="admin-page__btn admin-page__btn--danger"
-                  onClick={() => handleBlock(blockModalIp, 'all')}
-                  disabled={actionLoading || (currentUserIp != null && blockModalIp === currentUserIp)}
-                >
-                  Block All Access
-                </button>
-                <button
-                  type="button"
-                  className="admin-page__btn admin-page__btn--secondary"
-                  onClick={() => !actionLoading && setBlockModalIp(null)}
-                  disabled={actionLoading}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ChoiceModal
+          open={blockChoiceIp != null}
+          title="Block IP"
+          message={
+            blockChoiceIp == null
+              ? ''
+              : currentUserIp != null && blockChoiceIp === currentUserIp
+                ? `Choose block type for ${blockChoiceIp}. You cannot block your current IP.`
+                : `Choose block type for ${blockChoiceIp}:`
+          }
+          choices={[
+            {
+              label: 'Block Admin Access',
+              variant: 'neutral',
+              onClick: () => blockChoiceIp && handleBlock(blockChoiceIp, 'admin'),
+              disabled: currentUserIp != null && blockChoiceIp === currentUserIp,
+            },
+            {
+              label: 'Block All Access',
+              variant: 'danger',
+              onClick: () => blockChoiceIp && handleBlock(blockChoiceIp, 'all'),
+              disabled: currentUserIp != null && blockChoiceIp === currentUserIp,
+            },
+          ]}
+          cancelText="Cancel"
+          onCancel={() => {
+            if (!actionLoading) {
+              setBlockChoiceIp(null)
+              setModalError(null)
+            }
+          }}
+          error={modalError}
+          loading={actionLoading}
+        />
 
-        <UnblockIpModal
-          isOpen={unblockModal != null && unblockModal.scope === 'all'}
-          ip={unblockModal?.ip ?? ''}
-          onDowngrade={() => unblockModal && handleUnblockConfirm(unblockModal.ip, 'all', 'downgrade')}
-          onFullUnblock={() => unblockModal && handleUnblockConfirm(unblockModal.ip, 'all', 'delete')}
-          onClose={() => !actionLoading && setUnblockModal(null)}
+        <ConfirmModal
+          open={unblockConfirmIp != null}
+          title="Unblock Admin Access"
+          message={unblockConfirmIp ? `Unblock admin access for ${unblockConfirmIp}?` : ''}
+          confirmText="Unblock"
+          cancelText="Cancel"
+          confirmVariant="primary"
+          onConfirm={() =>
+            unblockConfirmIp && handleUnblockConfirm(unblockConfirmIp, 'admin', 'delete')
+          }
+          onCancel={() => {
+            if (!actionLoading) {
+              setUnblockConfirmIp(null)
+              setModalError(null)
+            }
+          }}
+          error={modalError}
+          loading={actionLoading}
+        />
+
+        <ChoiceModal
+          open={unblockChoiceIp != null}
+          title="Unblock Access"
+          message={unblockChoiceIp ? `Choose how to unblock ${unblockChoiceIp}:` : ''}
+          choices={[
+            {
+              label: 'Unblock Admin Access',
+              variant: 'primary',
+              onClick: () =>
+                unblockChoiceIp && handleUnblockConfirm(unblockChoiceIp, 'all', 'downgrade'),
+            },
+            {
+              label: 'Unblock All Access',
+              variant: 'neutral',
+              onClick: () =>
+                unblockChoiceIp && handleUnblockConfirm(unblockChoiceIp, 'all', 'delete'),
+            },
+          ]}
+          cancelText="Cancel"
+          onCancel={() => {
+            if (!actionLoading) {
+              setUnblockChoiceIp(null)
+              setModalError(null)
+            }
+          }}
+          error={modalError}
           loading={actionLoading}
         />
       </div>
