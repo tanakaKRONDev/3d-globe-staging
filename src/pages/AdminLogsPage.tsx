@@ -40,13 +40,23 @@ function defaultTo(): string {
 
 async function fetchLogs(from: string, to: string): Promise<AccessLogRow[]> {
   const params = new URLSearchParams()
-  if (from) params.set('from', from)
-  if (to) params.set('to', to)
+  if (from) {
+    const fromMs = new Date(from).getTime()
+    if (Number.isFinite(fromMs)) params.set('fromMs', String(fromMs))
+    else params.set('from', from)
+  }
+  if (to) {
+    const toMs = new Date(to).getTime()
+    if (Number.isFinite(toMs)) params.set('toMs', String(toMs))
+    else params.set('to', to)
+  }
   const res = await fetch(`${API}/logs?${params.toString()}`, { credentials: 'include' })
   if (res.status === 401) throw new Error('unauthorized')
   if (!res.ok) throw new Error('Failed to fetch logs')
   const data = await res.json()
-  return Array.isArray(data) ? data : []
+  if (data != null && Array.isArray(data.logs)) return data.logs
+  if (Array.isArray(data)) return data
+  return []
 }
 
 async function adminFetch(path: string, options: RequestInit = {}): Promise<Response> {

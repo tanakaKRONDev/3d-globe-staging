@@ -25,6 +25,65 @@ function adminUnauthorized() {
   })
 }
 
+/**
+ * Parse logs time range: fromMs/toMs (integers) or from/to (ISO strings).
+ * Returns { ok: true, fromMs, toMs } or { ok: false } for 400.
+ */
+function parseLogsTimeRange(searchParams) {
+  const now = Date.now()
+  const defaultFrom = now - 24 * 60 * 60 * 1000
+  let fromMs = null
+  let toMs = null
+
+  const fromMsParam = searchParams.get('fromMs')
+  const toMsParam = searchParams.get('toMs')
+  if (fromMsParam != null && fromMsParam !== '') {
+    const n = parseInt(fromMsParam, 10)
+    if (Number.isInteger(n) && Number.isFinite(n)) fromMs = n
+  }
+  if (toMsParam != null && toMsParam !== '') {
+    const n = parseInt(toMsParam, 10)
+    if (Number.isInteger(n) && Number.isFinite(n)) toMs = n
+  }
+
+  function parseTimeString(s) {
+    if (!s || typeof s !== 'string') return null
+    s = s.trim()
+    if (!s) return null
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) s = s + ':00'
+    if (!s.endsWith('Z') && !/[-+]\d{2}:?\d{2}$/.test(s)) s = s + 'Z'
+    const ms = Date.parse(s)
+    return Number.isFinite(ms) ? ms : null
+  }
+
+  const fromParam = searchParams.get('from')
+  const toParam = searchParams.get('to')
+  if (fromMs == null && fromParam != null && fromParam !== '') {
+    fromMs = parseTimeString(fromParam)
+    if (fromMs == null) return { ok: false }
+  }
+  if (toMs == null && toParam != null && toParam !== '') {
+    toMs = parseTimeString(toParam)
+    if (toMs == null) return { ok: false }
+  }
+
+  if (fromMs == null) fromMs = defaultFrom
+  if (toMs == null) toMs = now
+  if (fromMs > toMs) return { ok: false }
+  return { ok: true, fromMs, toMs }
+}
+
+function msToSqliteDatetime(ms) {
+  const d = new Date(ms)
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  const h = String(d.getUTCHours()).padStart(2, '0')
+  const min = String(d.getUTCMinutes()).padStart(2, '0')
+  const sec = String(d.getUTCSeconds()).padStart(2, '0')
+  return `${y}-${m}-${day} ${h}:${min}:${sec}`
+}
+
 async function getAdminSigningKey(env) {
   const secret = env.ADMIN_PASSWORD || ''
   return crypto.subtle.importKey(
@@ -523,38 +582,31 @@ export default {
 
       // --- Admin access logs (default last 24h, include block_scope from ip_blocks, newest first) ---
       if (url.pathname === '/api/admin/logs' && request.method === 'GET') {
-        const fromParam = (url.searchParams.get('from') || '').trim()
-        const toParam = (url.searchParams.get('to') || '').trim()
-        const normalizeDt = (s) => (s ? s.replace('T', ' ').replace(/( \d{2}:\d{2})$/, '$1:00') : '')
-        const fromVal = normalizeDt(fromParam)
-        const toVal = normalizeDt(toParam)
-        const defaultRange = !fromVal && !toVal
+        const parsed = parseLogsTimeRange(url.searchParams)
+        if (!parsed.ok) {
+          return jsonResponse({ error: 'Invalid time range' }, 400)
+        }
+        const { fromMs, toMs } = parsed
+        const fromStr = msToSqliteDatetime(fromMs)
+        const toStr = msToSqliteDatetime(toMs)
         try {
-          let query = `SELECT l.created_at AS timestamp, l.ip, l.country, l.region, l.city, l.user_agent AS userAgent, l.path, b.scope AS block_scope
+          const query = `SELECT l.created_at AS timestamp, l.ip, l.country, l.region, l.city, l.user_agent AS userAgent, l.path, b.scope AS block_scope
             FROM access_logs l
-            LEFT JOIN ip_blocks b ON l.ip = b.ip`
-          const args = []
-          if (defaultRange) {
-            query += ` WHERE l.created_at >= datetime('now', '-1 day')`
-          } else {
-            if (fromVal) {
-              query += ` WHERE l.created_at >= ?`
-              args.push(fromVal)
-            }
-            if (toVal) {
-              query += fromVal ? ` AND l.created_at <= ?` : ` WHERE l.created_at <= ?`
-              args.push(toVal)
-            }
-          }
-          query += ` ORDER BY l.created_at DESC LIMIT 5000`
-          const stmt = args.length ? env.DB.prepare(query).bind(...args) : env.DB.prepare(query)
+            LEFT JOIN ip_blocks b ON l.ip = b.ip
+            WHERE l.created_at >= ? AND l.created_at <= ?
+            ORDER BY l.created_at DESC LIMIT 5000`
+          const stmt = env.DB.prepare(query).bind(fromStr, toStr)
           const { results } = await stmt.all()
-          const rows = (results ?? []).map((r) => ({
+          const logs = (results ?? []).map((r) => ({
             ...r,
             block_scope: r.block_scope === 'admin' || r.block_scope === 'all' ? r.block_scope : null,
           }))
-          return jsonResponse(rows)
+          return jsonResponse({ logs })
         } catch (err) {
+          const msg = err && err.message ? String(err.message) : ''
+          if (/no such table:\s*access_logs/i.test(msg)) {
+            return jsonResponse({ error: 'access_logs table missing: run D1 migrations' }, 500)
+          }
           console.error('[api/admin/logs]', err)
           return jsonResponse({ error: 'Failed to fetch logs' }, 500)
         }
