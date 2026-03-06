@@ -144,6 +144,60 @@
   min-width: 180px;
 }
 
+/* Logs: blocked row */
+.admin-logs__row--blocked {
+  background: rgba(239, 68, 68, 0.08);
+  color: rgba(239, 68, 68, 0.95);
+}
+
+.admin-logs__row--blocked:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.admin-logs__action-col {
+  white-space: nowrap;
+}
+
+/* Logs modals */
+.admin-logs__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: var(--space-4);
+}
+
+.admin-logs__modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow-glass);
+}
+
+.admin-logs__modal .admin-page__subtitle {
+  margin-top: 0;
+}
+
+.admin-logs__modal .admin-page__muted {
+  margin-bottom: var(--space-4);
+}
+
+.admin-logs__modal-warning {
+  margin-bottom: var(--space-3);
+}
+
+.admin-logs__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 /* Rollback modal overlay */
 .admin-page__rollback-modal {
   z-index: var(--z-modal);

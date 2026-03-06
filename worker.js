@@ -337,6 +337,37 @@ function skipSiteGate(pathname) {
   )
 }
 
+/** Client IP: prefer cf-connecting-ip, fallback x-forwarded-for; sanitize (trim, first if comma-separated). See src/server/ip.js. */
+function getClientIp(request) {
+  const cf = request.headers.get('cf-connecting-ip')
+  if (cf != null && typeof cf === 'string') {
+    const trimmed = cf.trim()
+    if (trimmed) return trimmed
+  }
+  const xff = request.headers.get('x-forwarded-for')
+  if (xff == null || typeof xff !== 'string') return null
+  const first = xff.split(',')[0]
+  const ip = first != null ? first.trim() : ''
+  return ip || null
+}
+
+/** Block scope for IP from ip_blocks. Returns 'admin'|'all'|null. See src/server/blocks.js. */
+async function getBlockScope(DB, ip) {
+  if (!ip || !DB) return null
+  try {
+    const row = await DB.prepare('SELECT scope FROM ip_blocks WHERE ip = ?').bind(ip).first()
+    if (!row || (row.scope !== 'admin' && row.scope !== 'all')) return null
+    return row.scope
+  } catch (err) {
+    console.error('[getBlockScope]', err)
+    return null
+  }
+}
+
+function blockedResponse() {
+  return new Response('Blocked', { status: 403 })
+}
+
 /** True if path looks like an HTML page request (no static asset extension). */
 function isPagePath(pathname) {
   return !/\.(js|css|mjs|png|ico|svg|jpg|jpeg|gif|webp|woff2?|ttf|otf|json|map|xml)(\?|$)/i.test(pathname)
@@ -345,8 +376,7 @@ function isPagePath(pathname) {
 /** Log page access to D1 (IP stored as-is; optional hashing can be added via env). Fire-and-forget via ctx.waitUntil. */
 async function logPageAccess(env, request, url) {
   try {
-    const ipRaw = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || ''
-    const ip = (ipRaw && ipRaw.split(',')[0].trim()) || ''
+    const ip = getClientIp(request) || ''
     const country = (request.cf && request.cf.country) || ''
     const region = (request.cf && request.cf.region) || ''
     const city = (request.cf && request.cf.city) || ''
@@ -367,6 +397,16 @@ export default {
   async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url)
+
+      // IP block enforcement (before any routing)
+      const clientIp = getClientIp(request)
+      if (clientIp && env.DB) {
+        const scope = await getBlockScope(env.DB, clientIp)
+        if (scope === 'all') return blockedResponse()
+        if (scope === 'admin' && (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin'))) {
+          return blockedResponse()
+        }
+      }
 
       if (url.pathname === '/health') {
         return new Response('OK', { status: 200 })
@@ -432,6 +472,12 @@ export default {
         return adminUnauthorized()
       }
 
+      // --- Admin current IP (for lockout-prevention UI) ---
+      if (url.pathname === '/api/admin/me' && request.method === 'GET') {
+        const ip = getClientIp(request)
+        return jsonResponse({ ip: ip != null ? ip : null })
+      }
+
       // --- Snapshot helper (keep last 20) ---
       async function saveStopsSnapshot(env) {
         try {
@@ -475,32 +521,138 @@ export default {
         }
       }
 
-      // --- Admin access logs ---
+      // --- Admin access logs (default last 24h, include block_scope from ip_blocks, newest first) ---
       if (url.pathname === '/api/admin/logs' && request.method === 'GET') {
         const fromParam = (url.searchParams.get('from') || '').trim()
         const toParam = (url.searchParams.get('to') || '').trim()
-        // Normalize datetime-local style (YYYY-MM-DDTHH:mm) to SQLite-friendly format
         const normalizeDt = (s) => (s ? s.replace('T', ' ').replace(/( \d{2}:\d{2})$/, '$1:00') : '')
         const fromVal = normalizeDt(fromParam)
         const toVal = normalizeDt(toParam)
+        const defaultRange = !fromVal && !toVal
         try {
-          let query = `SELECT created_at AS timestamp, ip, country, region, city, user_agent AS userAgent, path FROM access_logs`
+          let query = `SELECT l.created_at AS timestamp, l.ip, l.country, l.region, l.city, l.user_agent AS userAgent, l.path, b.scope AS block_scope
+            FROM access_logs l
+            LEFT JOIN ip_blocks b ON l.ip = b.ip`
           const args = []
-          if (fromVal) {
-            query += ` WHERE created_at >= ?`
-            args.push(fromVal)
+          if (defaultRange) {
+            query += ` WHERE l.created_at >= datetime('now', '-1 day')`
+          } else {
+            if (fromVal) {
+              query += ` WHERE l.created_at >= ?`
+              args.push(fromVal)
+            }
+            if (toVal) {
+              query += fromVal ? ` AND l.created_at <= ?` : ` WHERE l.created_at <= ?`
+              args.push(toVal)
+            }
           }
-          if (toVal) {
-            query += args.length ? ` AND created_at <= ?` : ` WHERE created_at <= ?`
-            args.push(toVal)
-          }
-          query += ` ORDER BY created_at DESC LIMIT 5000`
+          query += ` ORDER BY l.created_at DESC LIMIT 5000`
           const stmt = args.length ? env.DB.prepare(query).bind(...args) : env.DB.prepare(query)
           const { results } = await stmt.all()
-          return jsonResponse(results ?? [])
+          const rows = (results ?? []).map((r) => ({
+            ...r,
+            block_scope: r.block_scope === 'admin' || r.block_scope === 'all' ? r.block_scope : null,
+          }))
+          return jsonResponse(rows)
         } catch (err) {
           console.error('[api/admin/logs]', err)
           return jsonResponse({ error: 'Failed to fetch logs' }, 500)
+        }
+      }
+
+      // --- Admin blocks: list ---
+      if (url.pathname === '/api/admin/blocks' && request.method === 'GET') {
+        try {
+          const { results } = await env.DB.prepare(
+            `SELECT ip, scope, created_at, updated_at, note FROM ip_blocks ORDER BY updated_at DESC`
+          ).all()
+          return jsonResponse(results ?? [])
+        } catch (err) {
+          console.error('[api/admin/blocks GET]', err)
+          return jsonResponse({ error: 'Failed to fetch blocks' }, 500)
+        }
+      }
+
+      // --- Admin blocks: upsert (guard: cannot block own IP) ---
+      if (url.pathname === '/api/admin/blocks' && request.method === 'POST') {
+        let body
+        try {
+          body = await request.json()
+        } catch {
+          return jsonResponse({ error: 'Invalid JSON' }, 400)
+        }
+        const ip = body && typeof body.ip === 'string' ? body.ip.trim() : ''
+        const scope = body && body.scope === 'all' ? 'all' : body && body.scope === 'admin' ? 'admin' : null
+        const note = body && typeof body.note === 'string' ? body.note : null
+        if (!ip) return jsonResponse({ error: 'ip is required' }, 400)
+        if (!scope) return jsonResponse({ error: 'scope must be admin or all' }, 400)
+        const currentIp = getClientIp(request)
+        if (currentIp && ip === currentIp) {
+          return jsonResponse({ error: 'Cannot block your current IP' }, 400)
+        }
+        try {
+          const now = Date.now()
+          const existing = await env.DB.prepare('SELECT created_at FROM ip_blocks WHERE ip = ?').bind(ip).first()
+          if (existing) {
+            await env.DB.prepare(
+              'UPDATE ip_blocks SET scope = ?, updated_at = ?, note = ? WHERE ip = ?'
+            )
+              .bind(scope, now, note, ip)
+              .run()
+          } else {
+            await env.DB.prepare(
+              'INSERT INTO ip_blocks (ip, scope, created_at, updated_at, note) VALUES (?, ?, ?, ?, ?)'
+            )
+              .bind(ip, scope, now, now, note)
+              .run()
+          }
+          return jsonResponse({ ok: true })
+        } catch (err) {
+          console.error('[api/admin/blocks POST]', err)
+          return jsonResponse({ error: 'Failed to save block' }, 500)
+        }
+      }
+
+      // --- Admin blocks: update scope (PUT) or delete (DELETE) by :ip ---
+      const blocksIpMatch = url.pathname.match(/^\/api\/admin\/blocks\/(.+)$/)
+      if (blocksIpMatch && (request.method === 'PUT' || request.method === 'DELETE')) {
+        const ip = decodeURIComponent(blocksIpMatch[1])
+        if (!ip) return jsonResponse({ error: 'IP required' }, 400)
+        const currentIp = getClientIp(request)
+        if (currentIp && ip === currentIp) {
+          return jsonResponse({ error: 'Cannot modify block for your current IP' }, 400)
+        }
+        if (request.method === 'DELETE') {
+          try {
+            const info = await env.DB.prepare('DELETE FROM ip_blocks WHERE ip = ?').bind(ip).run()
+            return jsonResponse({ ok: true, deleted: info.meta.changes > 0 })
+          } catch (err) {
+            console.error('[api/admin/blocks DELETE]', err)
+            return jsonResponse({ error: 'Failed to remove block' }, 500)
+          }
+        }
+        let body
+        try {
+          body = await request.json()
+        } catch {
+          return jsonResponse({ error: 'Invalid JSON' }, 400)
+        }
+        const scope = body && body.scope === 'all' ? 'all' : body && body.scope === 'admin' ? 'admin' : null
+        if (!scope) return jsonResponse({ error: 'scope must be admin or all' }, 400)
+        try {
+          const now = Date.now()
+          const info = await env.DB.prepare(
+            'UPDATE ip_blocks SET scope = ?, updated_at = ? WHERE ip = ?'
+          )
+            .bind(scope, now, ip)
+            .run()
+          if (info.meta.changes === 0) {
+            return jsonResponse({ error: 'Block not found' }, 404)
+          }
+          return jsonResponse({ ok: true })
+        } catch (err) {
+          console.error('[api/admin/blocks PUT]', err)
+          return jsonResponse({ error: 'Failed to update block' }, 500)
         }
       }
 
@@ -559,7 +711,7 @@ export default {
       const geocodeMemCache = new Map()
 
       function getGeocodeRateKey(request, endpoint) {
-        const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+        const ip = getClientIp(request) || 'unknown'
         return `${ip}:${endpoint}`
       }
 
