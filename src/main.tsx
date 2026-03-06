@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.tsx'
 import { AdminErrorBoundary } from './components/admin/AdminErrorBoundary'
 import { AdminPage } from './pages/AdminPage'
+import { AdminLogsPage } from './pages/AdminLogsPage'
 import './styles/tokens.css'
 import './styles/theme.css'
 import './styles/admin.css'
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
+        <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

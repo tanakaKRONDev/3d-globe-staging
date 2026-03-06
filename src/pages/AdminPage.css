@@ -125,6 +125,25 @@
   color: var(--text);
 }
 
+/* Admin logs filters */
+.admin-logs-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin-logs-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.admin-logs-filter .admin-page__input {
+  min-width: 180px;
+}
+
 /* Rollback modal overlay */
 .admin-page__rollback-modal {
   z-index: var(--z-modal);

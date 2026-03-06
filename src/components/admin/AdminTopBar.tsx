@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, RotateCcw, LogOut } from 'lucide-react'
+import { ArrowLeft, RotateCcw, LogOut, FileText } from 'lucide-react'
 
 export interface AdminTopBarProps {
   title?: string
   onRollbackClick: () => void
   onLogout?: () => void
+  showLogsLink?: boolean
 }
 
-export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogout }: AdminTopBarProps) {
+export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogout, showLogsLink = true }: AdminTopBarProps) {
   return (
     <header className="admin-topbar">
       <div className="admin-topbar__left">
@@ -17,6 +18,11 @@ export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogo
         <h1 className="admin-topbar__title">{title}</h1>
       </div>
       <div className="admin-topbar__actions">
+        {showLogsLink && (
+          <Link to="/admin/logs" className="admin-topbar__btn admin-topbar__btn--secondary">
+            <FileText size={18} /> Logs
+          </Link>
+        )}
         <button
           type="button"
           className="admin-topbar__btn admin-topbar__btn--primary"

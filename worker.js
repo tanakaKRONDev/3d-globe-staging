@@ -337,6 +337,32 @@ function skipSiteGate(pathname) {
   )
 }
 
+/** True if path looks like an HTML page request (no static asset extension). */
+function isPagePath(pathname) {
+  return !/\.(js|css|mjs|png|ico|svg|jpg|jpeg|gif|webp|woff2?|ttf|otf|json|map|xml)(\?|$)/i.test(pathname)
+}
+
+/** Log page access to D1 (IP stored as-is; optional hashing can be added via env). Fire-and-forget via ctx.waitUntil. */
+async function logPageAccess(env, request, url) {
+  try {
+    const ipRaw = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || ''
+    const ip = (ipRaw && ipRaw.split(',')[0].trim()) || ''
+    const country = (request.cf && request.cf.country) || ''
+    const region = (request.cf && request.cf.region) || ''
+    const city = (request.cf && request.cf.city) || ''
+    const userAgent = request.headers.get('user-agent') || ''
+    const path = url.pathname + url.search
+    const id = crypto.randomUUID()
+    await env.DB.prepare(
+      `INSERT INTO access_logs (id, created_at, ip, country, region, city, user_agent, path) VALUES (?, datetime('now'), ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(id, ip, country, region, city, userAgent, path)
+      .run()
+  } catch (err) {
+    console.error('[access_log]', err)
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     try {
@@ -348,6 +374,7 @@ export default {
 
       // GET /auth/login: always return HTML, never throw, no env/crypto
       if (url.pathname === '/auth/login' && request.method === 'GET') {
+        if (env.DB) ctx.waitUntil(logPageAccess(env, request, url))
         const returnTo = url.searchParams.get('returnTo') || '/'
         return new Response(loginPageHtml(returnTo, null), {
           status: 200,
@@ -445,6 +472,35 @@ export default {
         } catch (err) {
           console.error('[api/admin/versions]', err)
           return jsonResponse({ error: 'Failed to fetch versions' }, 500)
+        }
+      }
+
+      // --- Admin access logs ---
+      if (url.pathname === '/api/admin/logs' && request.method === 'GET') {
+        const fromParam = (url.searchParams.get('from') || '').trim()
+        const toParam = (url.searchParams.get('to') || '').trim()
+        // Normalize datetime-local style (YYYY-MM-DDTHH:mm) to SQLite-friendly format
+        const normalizeDt = (s) => (s ? s.replace('T', ' ').replace(/( \d{2}:\d{2})$/, '$1:00') : '')
+        const fromVal = normalizeDt(fromParam)
+        const toVal = normalizeDt(toParam)
+        try {
+          let query = `SELECT created_at AS timestamp, ip, country, region, city, user_agent AS userAgent, path FROM access_logs`
+          const args = []
+          if (fromVal) {
+            query += ` WHERE created_at >= ?`
+            args.push(fromVal)
+          }
+          if (toVal) {
+            query += args.length ? ` AND created_at <= ?` : ` WHERE created_at <= ?`
+            args.push(toVal)
+          }
+          query += ` ORDER BY created_at DESC LIMIT 5000`
+          const stmt = args.length ? env.DB.prepare(query).bind(...args) : env.DB.prepare(query)
+          const { results } = await stmt.all()
+          return jsonResponse(results ?? [])
+        } catch (err) {
+          console.error('[api/admin/logs]', err)
+          return jsonResponse({ error: 'Failed to fetch logs' }, 500)
         }
       }
 
@@ -861,6 +917,7 @@ export default {
 
       // Skip site gate: /admin (frontend SPA; /api/admin/* already handled above)
       if (url.pathname.startsWith('/admin')) {
+        if (request.method === 'GET' && env.DB) ctx.waitUntil(logPageAccess(env, request, url))
         return env.ASSETS.fetch(request)
       }
 
@@ -917,6 +974,10 @@ export default {
         }
       }
 
+      // Log HTML page hits only (not static assets)
+      if (request.method === 'GET' && !url.pathname.startsWith('/api/') && isPagePath(url.pathname) && env.DB) {
+        ctx.waitUntil(logPageAccess(env, request, url))
+      }
       return env.ASSETS.fetch(request)
     } catch (err) {
       console.error('[auth] fatal', err)
