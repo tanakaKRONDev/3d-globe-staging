@@ -14,8 +14,8 @@ export type GlobeImageryHandles = {
 
 /**
  * Day imagery: GIBS WMTS (epsg3857) base layer.
- * Disabled night-lights overlay for now because the current source introduces polar artifacts.
- * Buildings and venue rendering are independent and intentionally unaffected.
+ * Night imagery: VIIRS city lights (dayAlpha/nightAlpha for night-side only).
+ * Polar artifacts are hidden via polar cover overlays, not by clipping imagery.
  */
 export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
   const layers = viewer.imageryLayers
@@ -44,7 +44,6 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
     credit: new Credit('NASA GIBS / VIIRS City Lights 2012'),
   })
   const nightLayer = layers.addImageryProvider(nightProvider)
-  nightLayer.show = false
   nightLayer.alpha = 1.0
   nightLayer.dayAlpha = 0.0
   nightLayer.nightAlpha = 1.0
