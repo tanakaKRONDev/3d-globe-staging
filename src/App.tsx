@@ -25,6 +25,7 @@ function App() {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null)
   const [lastSelectedStopId, setLastSelectedStopId] = useState<string | null>(null)
   const [mobilePanelCollapsed, setMobilePanelCollapsed] = useState(false)
+  const [buildingsSuppressedStopId, setBuildingsSuppressedStopId] = useState<string | null>(null)
   const scenario: Scenario = 'base'
   const [error, setError] = useState<string | null>(null)
   const [, setViewer] = useState<Viewer | null>(null)
@@ -96,6 +97,7 @@ function App() {
     setLastSelectedStopId(stopId)
     setViewMode('venue')
     setMobilePanelCollapsed(false) // open panel when selecting on mobile
+    setBuildingsSuppressedStopId(null) // reset until load completes
   }, [stops])
 
   // Overview button: fly out to overview above last selected venue, then deselect
@@ -134,6 +136,10 @@ function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const handleBuildingsSuppressed = useCallback((stopId: string, suppressed: boolean) => {
+    setBuildingsSuppressedStopId(suppressed ? stopId : null)
   }, [])
 
   const handleGlobeReady = useCallback((cesiumViewer: Viewer, premiumCameraManager: PremiumCameraManager) => {
@@ -217,6 +223,7 @@ function App() {
         onSelectStop={selectStop}
         onFlyToOverview={(fn) => { flyToOverviewRef.current = fn }}
         onFlyToOverviewAboveStop={(fn) => { flyToOverviewAboveStopRef.current = fn }}
+        onBuildingsSuppressed={handleBuildingsSuppressed}
       />
       
       {/* Premium Layout System */}
@@ -264,6 +271,7 @@ function App() {
             <StopPanel
               stop={selectedStop}
               onCollapseToggle={() => setMobilePanelCollapsed(true)}
+              buildingsPendingUpdate={selectedStopId != null && buildingsSuppressedStopId === selectedStopId}
             />
           )}
         </div>

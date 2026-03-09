@@ -200,15 +200,15 @@ async function saveGeoJSON(
   stopId: string,
   geojson: GeoJSONFC,
   root: string,
-  meta?: { centerLat: number; centerLng: number; radiusM: number }
+  meta?: { sourceLat: number; sourceLng: number; radius: number }
 ): Promise<void> {
   if (meta) {
     geojson.properties = {
       ...geojson.properties,
-      centerLat: meta.centerLat,
-      centerLng: meta.centerLng,
-      radiusM: meta.radiusM,
-      generatedAt: new Date().toISOString(),
+      sourceLat: meta.sourceLat,
+      sourceLng: meta.sourceLng,
+      radius: meta.radius,
+      fetchedAt: new Date().toISOString(),
     }
   }
   const dir = join(root, OUTPUT_DIR)
@@ -296,9 +296,9 @@ async function main() {
     try {
       const geojson = await fetchWithRetry(lat, lng, opts.radius, opts.limit)
       await saveGeoJSON(stop.id, geojson, root, {
-        centerLat: stop.lat!,
-        centerLng: stop.lng!,
-        radiusM: opts.radius,
+        sourceLat: stop.lat!,
+        sourceLng: stop.lng!,
+        radius: opts.radius,
       })
       const featCount = geojson.features.length
       if (featCount === 0) zeroFeatureStops++

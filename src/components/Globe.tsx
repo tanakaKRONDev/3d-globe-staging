@@ -38,6 +38,7 @@ interface GlobeProps {
   onSelectStop?: (stopId: string) => void
   onFlyToOverview?: (flyToOverviewFn: (stops: Stop[]) => void) => void
   onFlyToOverviewAboveStop?: (flyToOverviewAboveStopFn: (stop: Stop) => Promise<void>) => void
+  onBuildingsSuppressed?: (stopId: string, suppressed: boolean) => void
 }
 
 export function Globe({ 
@@ -49,7 +50,8 @@ export function Globe({
   selectedStopId = null, 
   onSelectStop,
   onFlyToOverview,
-  onFlyToOverviewAboveStop
+  onFlyToOverviewAboveStop,
+  onBuildingsSuppressed
 }: GlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const creditContainerRef = useRef<HTMLDivElement>(null)
@@ -514,15 +516,26 @@ export function Globe({
         const check = () => viewModeRef.current === 'venue' && selectedStopIdRef.current === selectedStop.id
         void buildingManagerRef.current
           .loadBuildingsForStop(selectedStop, check)
+          .then(result => {
+            if (result.suppressed) {
+              onBuildingsSuppressed?.(selectedStop.id, true)
+            } else {
+              onBuildingsSuppressed?.(selectedStop.id, false)
+            }
+          })
           .catch(error => {
             console.warn(`[Buildings] Failed to load for ${selectedStop.city}:`, error)
+            onBuildingsSuppressed?.(selectedStop.id, false)
           })
+      } else {
+        onBuildingsSuppressed?.(selectedStopId, false)
       }
     } else {
       // Overview: clear buildings
       void buildingManagerRef.current.clearAllBuildings()
+      if (selectedStopId) onBuildingsSuppressed?.(selectedStopId, false)
     }
-  }, [viewMode, selectedStopId, stops, isReady])
+  }, [viewMode, selectedStopId, stops, isReady, onBuildingsSuppressed])
 
   return (
     <>

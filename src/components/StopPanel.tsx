@@ -5,9 +5,11 @@ import { StickyNote, ChevronDown } from 'lucide-react'
 interface StopPanelProps {
   stop: Stop | null
   onCollapseToggle?: () => void
+  /** When true, show "Buildings pending update" (suppressed due to venue coord mismatch) */
+  buildingsPendingUpdate?: boolean
 }
 
-export function StopPanel({ stop, onCollapseToggle }: StopPanelProps) {
+export function StopPanel({ stop, onCollapseToggle, buildingsPendingUpdate }: StopPanelProps) {
   if (!stop) {
     return (
       <div className="glass-panel p-xl flex items-center justify-center">
@@ -93,6 +95,18 @@ export function StopPanel({ stop, onCollapseToggle }: StopPanelProps) {
             }}
           >
             {stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}
+          </div>
+        )}
+        {buildingsPendingUpdate && (
+          <div
+            style={{
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--text-muted)',
+              fontStyle: 'italic',
+              marginTop: 'var(--space-2)',
+            }}
+          >
+            Buildings pending update
           </div>
         )}
       </div>

@@ -18,6 +18,24 @@ import { makeGreyColor } from './materials/buildingGrey'
 
 const MAX_BUILDINGS_PER_STOP = 500
 const DEBUG_BUILDINGS = true
+const LOCATION_MISMATCH_THRESHOLD_M = 1000
+
+function haversineMeters(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6_371_000
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 /**
  * Calculates building height from OSM properties with proper clamping
@@ -114,15 +132,20 @@ export class BuildingManager {
     this.viewer = viewer
   }
 
+  /** True when buildings were suppressed for this stop (source coords mismatch). */
+  private suppressedForStop: Set<string> = new Set()
+
   /**
    * Loads and displays buildings for a stop. Uses walls + roofs with photo textures.
    * Only intended for venue mode. Caches data so re-selecting does not re-download.
+   * Skips rendering if GeoJSON sourceLat/sourceLng differs from stop lat/lng by >1km.
    * @param isStillRelevant - Optional predicate; if false when load completes, entities are not added
+   * @returns { suppressed } - true if buildings were not rendered due to location mismatch
    */
   async loadBuildingsForStop(
     stop: Stop,
     isStillRelevant?: () => boolean
-  ): Promise<void> {
+  ): Promise<{ suppressed?: boolean }> {
     const stopId = stop.id
 
     // Remove previously displayed buildings (keep in cache)
@@ -136,23 +159,27 @@ export class BuildingManager {
     // Cache hit: add cached entities to viewer (or use cached empty = no buildings)
     const cached = this.entityCache.get(stopId)
     if (cached !== undefined) {
+      const suppressed = this.suppressedForStop.has(stopId)
+      if (suppressed) return { suppressed: true }
       cached.forEach((e) => this.viewer.entities.add(e))
       this.entitiesByStop.set(stopId, cached)
       if (DEBUG_BUILDINGS && cached.length > 0) {
         console.log(`[Buildings] Restored from cache (${cached.length / 2} buildings) for ${stop.city}`)
       }
-      return
+      return {}
     }
 
     if (this.loadingPromises.has(stopId)) {
-      return this.loadingPromises.get(stopId) ?? Promise.resolve()
+      const p = this.loadingPromises.get(stopId)
+      return p ? p.then(() => ({ suppressed: this.suppressedForStop.has(stopId) })) : Promise.resolve({})
     }
 
     const loadingPromise = this.loadBuildingsInternal(stop, isStillRelevant)
     this.loadingPromises.set(stopId, loadingPromise)
 
     try {
-      await loadingPromise
+      const result = await loadingPromise
+      return result
     } finally {
       this.loadingPromises.delete(stopId)
     }
@@ -161,7 +188,7 @@ export class BuildingManager {
   private async loadBuildingsInternal(
     stop: Stop,
     isStillRelevant?: () => boolean
-  ): Promise<void> {
+  ): Promise<{ suppressed?: boolean }> {
     const stopId = stop.id
     const buildingUrl = `/data/buildings/${stopId}.geojson`
     const ellipsoid = this.viewer.scene.globe.ellipsoid
@@ -173,7 +200,7 @@ export class BuildingManager {
         if (DEBUG_BUILDINGS) {
           console.warn(`[Buildings] ${stop.city}: HTTP ${response.status}, skipping buildings`)
         }
-        return
+        return {}
       }
 
       const data: GeoJSONFC = await response.json()
@@ -184,8 +211,34 @@ export class BuildingManager {
           console.log(`[Buildings] ${stop.city}: no valid features, skipping`)
         }
         this.entityCache.set(stopId, [])
-        return
+        return {}
       }
+
+      // Avoid wrong-location buildings: if GeoJSON source coords differ from stop by >1km, suppress
+      const props = data.properties ?? {}
+      const srcLat = (props.sourceLat ?? props.centerLat) as number | undefined
+      const srcLng = (props.sourceLng ?? props.centerLng) as number | undefined
+      if (
+        srcLat != null &&
+        srcLng != null &&
+        stop.lat != null &&
+        stop.lng != null &&
+        typeof srcLat === 'number' &&
+        typeof srcLng === 'number'
+      ) {
+        const distM = haversineMeters(stop.lat, stop.lng, srcLat, srcLng)
+        if (distM > LOCATION_MISMATCH_THRESHOLD_M) {
+          if (DEBUG_BUILDINGS) {
+            console.log(
+              `[Buildings] ${stop.city}: source coords mismatch (${distM.toFixed(0)}m > ${LOCATION_MISMATCH_THRESHOLD_M}m), suppressing buildings`
+            )
+          }
+          this.suppressedForStop.add(stopId)
+          this.entityCache.set(stopId, [])
+          return { suppressed: true }
+        }
+      }
+      this.suppressedForStop.delete(stopId)
 
       const features = data.features
       const entities: Entity[] = []
@@ -263,7 +316,7 @@ export class BuildingManager {
 
       if (isStillRelevant && !isStillRelevant()) {
         entities.forEach((e) => this.viewer.entities.remove(e))
-        return
+        return {}
       }
 
       this.entitiesByStop.set(stopId, entities)
@@ -281,10 +334,12 @@ export class BuildingManager {
           console.log('[Buildings] building material (roof)', firstRoof.polygon.material)
         }
       }
+      return {}
     } catch (error) {
       if (DEBUG_BUILDINGS) {
         console.warn(`[Buildings] ${stop.city}:`, error)
       }
+      return {}
     }
   }
 
@@ -293,8 +348,13 @@ export class BuildingManager {
     if (entities) {
       entities.forEach(e => this.viewer.entities.remove(e))
       this.entitiesByStop.delete(stopId)
+      this.suppressedForStop.delete(stopId)
       console.log(`[Buildings] Removed buildings for stop ${stopId}`)
     }
+  }
+
+  isBuildingsSuppressedForStop(stopId: string): boolean {
+    return this.suppressedForStop.has(stopId)
   }
 
   setBuildingsVisibility(_stopId: string, _visible: boolean): void {
