@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import type { Viewer, ImageryLayer, Entity } from 'cesium'
+import type { Viewer, ImageryLayer } from 'cesium'
 import {
   EasingFunction,
   ScreenSpaceEventHandler,
@@ -24,7 +24,6 @@ import { attachVenueEnforcer, type VenueFrame } from '../lib/cesium/enforceVenue
 import { installVenueLighting } from '../lib/cesium/lighting'
 import { applyLightingByMode } from '../lib/cesium/overviewLighting'
 import { enterVenueOrbit } from '../lib/cesium/venueOrbit'
-import { installPolarCovers } from '../lib/cesium/polarCovers'
 import { OVERVIEW_DISTANCE_MULTIPLIER } from '../lib/cesium/camera/overview'
 import { getEarthRadius, computeEarthCenteredPoseAboveLatLng } from '../lib/cesium/camera/poses'
 import type { Stop } from '../lib/data/types'
@@ -71,7 +70,6 @@ export function Globe({
   const venueLightingCleanupRef = useRef<(() => void) | null>(null)
   const overviewLightingCleanupRef = useRef<(() => void) | null>(null)
   const nightLayerRef = useRef<ImageryLayer | null>(null)
-  const polarCoversRef = useRef<{ north: Entity; south: Entity } | null>(null)
   const clickHandlerRef = useRef<ScreenSpaceEventHandler | null>(null)
   const onSelectRef = useRef<((stopId: string) => void) | undefined>(onSelectStop)
   const initOnceRef = useRef(false)
@@ -217,9 +215,6 @@ export function Globe({
         // Initialize building manager
         buildingManagerRef.current = new BuildingManager(result.viewer)
 
-        // Polar cover overlays to hide imagery artifacts; shown only in overview
-        polarCoversRef.current = installPolarCovers(result.viewer)
-
         // Initial view: above equator, on same meridian as first stop
         autoRotateControllerRef.current = new AutoRotateController(result.viewer)
         const currentStops = stopsRef.current
@@ -330,7 +325,6 @@ export function Globe({
       overviewLightingCleanupRef.current?.()
       overviewLightingCleanupRef.current = null
       nightLayerRef.current = null
-      polarCoversRef.current = null
       if (clickHandlerRef.current) {
         clickHandlerRef.current.destroy()
         clickHandlerRef.current = null
@@ -405,21 +399,11 @@ export function Globe({
     }
   }, [viewMode, isReady])
 
-  // Night lights layer: only in overview; hide in venue so it never interferes
+  // Night lights layer: only in overview (day/night masking); hide in venue so it never interferes
   useEffect(() => {
     const layer = nightLayerRef.current
     if (!layer || !isReady) return
     layer.show = viewMode === 'overview'
-    viewerRef.current?.scene.requestRender()
-  }, [viewMode, isReady])
-
-  // Polar covers: only in overview; hide in venue (buildings/venue unaffected)
-  useEffect(() => {
-    const covers = polarCoversRef.current
-    if (!covers || !isReady) return
-    const visible = viewMode === 'overview'
-    covers.north.show = visible
-    covers.south.show = visible
     viewerRef.current?.scene.requestRender()
   }, [viewMode, isReady])
 
