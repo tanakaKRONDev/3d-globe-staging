@@ -244,15 +244,6 @@ export function Globe({
           const picked = result.viewer.scene.pick(event.position)
           if (!defined(picked)) return
 
-          const pickedObj = (picked as { id?: unknown }).id
-          const entityId =
-            typeof pickedObj === 'object' && pickedObj != null && 'id' in pickedObj
-              ? (pickedObj as { id?: string }).id
-              : typeof pickedObj === 'string'
-                ? pickedObj
-                : null
-          if (entityId === 'pole-mask-north' || entityId === 'pole-mask-south') return
-
           let stopId: string | null = null
           const pickedId = (picked as { id?: { id?: string; properties?: { stopId?: { getValue?: (t: unknown) => string } } } }).id
           if (pickedId) {

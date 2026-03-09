@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/create-placeholder-textures.mjs && node scripts/prebuild.mjs",
+    "prebuild": "node scripts/create-placeholder-textures.mjs && node scripts/generate-pole-overlays.mjs && node scripts/prebuild.mjs",
     "build": "node scripts/check-textures.mjs && vite build",
     "postbuild": "node scripts/verify-dist-data.mjs",
     "preview": "vite preview",
