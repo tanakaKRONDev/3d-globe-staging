@@ -8,7 +8,10 @@ import {
   Credit,
 } from 'cesium'
 
-const POLAR_CUTOFF_DEG = 82
+// Restrict night-lights imagery near poles to avoid source artifacts.
+// Keep day imagery full-globe so we do not create visible polar caps.
+const NIGHT_POLAR_CUTOFF_DEG = 75
+const nightRect = Rectangle.fromDegrees(-180, -NIGHT_POLAR_CUTOFF_DEG, 180, NIGHT_POLAR_CUTOFF_DEG)
 
 export type GlobeImageryHandles = {
   dayLayer: ImageryLayer
@@ -24,9 +27,6 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
   const layers = viewer.imageryLayers
   layers.removeAll(true)
 
-  // Hide polar imagery artifacts near extreme latitudes
-  const polarRect = Rectangle.fromDegrees(-180, -POLAR_CUTOFF_DEG, 180, POLAR_CUTOFF_DEG)
-
   const dayProvider = new WebMapTileServiceImageryProvider({
     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/default/GoogleMapsCompatible_Level8/{TileMatrix}/{TileRow}/{TileCol}.jpg',
     layer: 'BlueMarble_ShadedRelief_Bathymetry',
@@ -36,7 +36,6 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
     tilingScheme: new WebMercatorTilingScheme(),
     minimumLevel: 1,
     maximumLevel: 8,
-    rectangle: polarRect,
     credit: new Credit('NASA GIBS'),
   })
   const dayLayer = layers.addImageryProvider(dayProvider)
@@ -48,7 +47,7 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default//GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
     tilingScheme: new WebMercatorTilingScheme(),
     maximumLevel: 8,
-    rectangle: polarRect,
+    rectangle: nightRect,
     credit: new Credit('NASA GIBS / VIIRS City Lights 2012'),
   })
   const nightLayer = layers.addImageryProvider(nightProvider)
