@@ -1,11 +1,15 @@
 import {
   Viewer,
   ImageryLayer,
+  Rectangle,
   UrlTemplateImageryProvider,
   WebMapTileServiceImageryProvider,
   WebMercatorTilingScheme,
   Credit,
 } from 'cesium'
+
+// Hide polar imagery artifacts near extreme latitudes
+const POLAR_CUTOFF_DEG = 82
 
 export type GlobeImageryHandles = {
   dayLayer: ImageryLayer
@@ -36,6 +40,7 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
   dayLayer.alpha = 1.0
   dayLayer.dayAlpha = 1.0
   dayLayer.nightAlpha = 0.25
+  dayLayer.rectangle = Rectangle.fromDegrees(-180, -POLAR_CUTOFF_DEG, 180, POLAR_CUTOFF_DEG)
 
   const nightProvider = new UrlTemplateImageryProvider({
     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default//GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
@@ -50,6 +55,7 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
   nightLayer.brightness = 1.4
   nightLayer.gamma = 0.9
   nightLayer.saturation = 1.2
+  nightLayer.rectangle = Rectangle.fromDegrees(-180, -POLAR_CUTOFF_DEG, 180, POLAR_CUTOFF_DEG)
 
   return { dayLayer, nightLayer }
 }
