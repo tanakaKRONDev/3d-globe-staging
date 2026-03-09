@@ -10,6 +10,7 @@ import {
 } from 'cesium'
 import type { ImageryLayer } from 'cesium'
 import { installDayNightImagery } from './globeImagery'
+import { installPoleMasks } from './poleMasks'
 
 export interface ViewerCreationResult {
   viewer: Viewer
@@ -92,6 +93,7 @@ export async function createViewer(container: HTMLElement, creditContainer?: HTM
   viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
   const { dayLayer: gibsLayer, nightLayer } = installDayNightImagery(viewer)
+  installPoleMasks(viewer)
 
   const osm = new UrlTemplateImageryProvider({
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
