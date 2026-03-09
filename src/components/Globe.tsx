@@ -399,11 +399,11 @@ export function Globe({
     }
   }, [viewMode, isReady])
 
-  // Night lights layer: only in overview (day/night masking); hide in venue so it never interferes
+  // Night lights layer disabled (polar artifacts); keep hidden. Hide in venue so it never interferes.
   useEffect(() => {
     const layer = nightLayerRef.current
     if (!layer || !isReady) return
-    layer.show = viewMode === 'overview'
+    layer.show = false
     viewerRef.current?.scene.requestRender()
   }, [viewMode, isReady])
 

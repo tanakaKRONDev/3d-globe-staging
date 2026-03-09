@@ -1,17 +1,11 @@
 import {
   Viewer,
   ImageryLayer,
-  Rectangle,
   UrlTemplateImageryProvider,
   WebMapTileServiceImageryProvider,
   WebMercatorTilingScheme,
   Credit,
 } from 'cesium'
-
-// Restrict night-lights imagery near poles to avoid source artifacts.
-// Keep day imagery full-globe so we do not create visible polar caps.
-const NIGHT_POLAR_CUTOFF_DEG = 75
-const nightRect = Rectangle.fromDegrees(-180, -NIGHT_POLAR_CUTOFF_DEG, 180, NIGHT_POLAR_CUTOFF_DEG)
 
 export type GlobeImageryHandles = {
   dayLayer: ImageryLayer
@@ -19,9 +13,9 @@ export type GlobeImageryHandles = {
 }
 
 /**
- * Day imagery: same working GIBS WMTS (epsg3857) as before to avoid 404.
- * Night imagery: VIIRS city lights with dayAlpha/nightAlpha for night-side only.
- * Night masking requires globe.enableLighting = true (set in overview mode).
+ * Day imagery: GIBS WMTS (epsg3857) base layer.
+ * Disabled night-lights overlay for now because the current source introduces polar artifacts.
+ * Buildings and venue rendering are independent and intentionally unaffected.
  */
 export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
   const layers = viewer.imageryLayers
@@ -47,10 +41,10 @@ export function installDayNightImagery(viewer: Viewer): GlobeImageryHandles {
     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default//GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
     tilingScheme: new WebMercatorTilingScheme(),
     maximumLevel: 8,
-    rectangle: nightRect,
     credit: new Credit('NASA GIBS / VIIRS City Lights 2012'),
   })
   const nightLayer = layers.addImageryProvider(nightProvider)
+  nightLayer.show = false
   nightLayer.alpha = 1.0
   nightLayer.dayAlpha = 0.0
   nightLayer.nightAlpha = 1.0
