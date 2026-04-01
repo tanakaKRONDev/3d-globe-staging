@@ -1,7 +1,7 @@
 # name = "3d-globe-landing-page"
 name = "3d-globe-staging"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-02-20"
 
 # Secrets (set via: wrangler secret put <NAME>)
 # - SITE_PASSWORD: site gate; branded login at /auth/login, cookie site_auth

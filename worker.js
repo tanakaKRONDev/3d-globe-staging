@@ -9,6 +9,9 @@ const ADMIN_COOKIE = 'admin_session'
 const SESSION_MAX_AGE_SEC = 12 * 60 * 60 // 12 hours
 const SITE_AUTH_COOKIE = 'site_auth'
 
+/** Fallback branding (mirrors src/config/defaults.ts). */
+const DEFAULT_TITLE = 'WORLD TOUR 2026-2027'
+
 function timingSafeEqual(a, b) {
   const aBytes = encoder.encode(a)
   const bBytes = encoder.encode(b)
@@ -246,7 +249,7 @@ function loginPageHtml(returnTo, error) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Sign in – WORLD TOUR 2026-2027</title>
+  <title>Sign in – ${DEFAULT_TITLE}</title>
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%;margin:0;padding:0}
@@ -283,7 +286,7 @@ function loginPageHtml(returnTo, error) {
 <body>
   <div class="auth-shell">
     <div class="auth-card">
-      <h1 class="auth-card__title">WORLD TOUR 2026-2027</h1>
+      <h1 class="auth-card__title">${DEFAULT_TITLE}</h1>
       <p class="auth-card__subtitle">Internal Access</p>
       <div class="auth-card__body">
         <form class="auth-card__form" method="post" action="/auth/login">
@@ -396,7 +399,7 @@ function skipSiteGate(pathname) {
   )
 }
 
-/** Client IP: prefer cf-connecting-ip, fallback x-forwarded-for; sanitize (trim, first if comma-separated). See src/server/ip.js. */
+/** Client IP: prefer cf-connecting-ip, fallback x-forwarded-for; sanitize (trim, first if comma-separated). */
 function getClientIp(request) {
   const cf = request.headers.get('cf-connecting-ip')
   if (cf != null && typeof cf === 'string') {
@@ -410,7 +413,7 @@ function getClientIp(request) {
   return ip || null
 }
 
-/** Block scope for IP from ip_blocks. Returns 'admin'|'all'|null. See src/server/blocks.js. */
+/** Block scope for IP from ip_blocks. Returns 'admin'|'all'|null. */
 async function getBlockScope(DB, ip) {
   if (!ip || !DB) return null
   try {

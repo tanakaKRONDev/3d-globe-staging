@@ -1,8 +1,16 @@
 /**
  * Tokenless mode guardrails - dev only.
- * Warns if Ion token is set or any request hits Cesium Ion domains.
+ * Warns if Ion token is set or any request hits Cesium Ion / paid tile domains.
  */
-const ION_DOMAINS = ['api.cesium.com', 'ion.cesium.com']
+const BANNED_DOMAINS = [
+  'api.cesium.com',
+  'ion.cesium.com',
+  'assets.cesium.com',
+  'api.mapbox.com',
+  'api.maptiler.com',
+  'maps.googleapis.com',
+  'tiles.virtualearth.net',
+]
 
 function checkIonToken(): void {
   const Cesium = (window as unknown as { Cesium?: { Ion?: { defaultAccessToken?: string } } }).Cesium
@@ -13,10 +21,35 @@ function checkIonToken(): void {
   }
 }
 
+/** Trap future writes to Ion.defaultAccessToken so we catch assignment at any time. */
+function trapTokenSetter(): void {
+  const Cesium = (window as unknown as { Cesium?: { Ion?: Record<string, unknown> } }).Cesium
+  const ion = Cesium?.Ion
+  if (!ion) return
+  let current = ion.defaultAccessToken as string | undefined
+  try {
+    Object.defineProperty(ion, 'defaultAccessToken', {
+      get() { return current },
+      set(v: string) {
+        current = v
+        if (v) {
+          console.warn(
+            '⚠️ [Tokenless] Something set Cesium.Ion.defaultAccessToken. This app must stay tokenless.'
+          )
+        }
+      },
+      configurable: true,
+    })
+  } catch { /* property may not be configurable in some builds */ }
+}
+
 /** Run token check after Cesium may have loaded (async import). */
 function scheduleTokenCheck(): void {
   checkIonToken()
-  setTimeout(checkIonToken, 2000)
+  setTimeout(() => {
+    checkIonToken()
+    trapTokenSetter()
+  }, 2000)
 }
 
 function patchFetch(): void {
@@ -26,9 +59,9 @@ function patchFetch(): void {
     init?: RequestInit
   ): Promise<Response> {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url
-    for (const domain of ION_DOMAINS) {
+    for (const domain of BANNED_DOMAINS) {
       if (url.includes(domain)) {
-        console.warn(`⚠️ [Tokenless] Request to Cesium Ion detected: ${url}`)
+        console.warn(`⚠️ [Tokenless] Request to paid/Ion service detected: ${url}`)
         break
       }
     }

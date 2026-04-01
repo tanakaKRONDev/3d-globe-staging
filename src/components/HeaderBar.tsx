@@ -1,3 +1,5 @@
+import { DEFAULT_TITLE, DEFAULT_SUBTITLE } from '../config/defaults'
+
 interface HeaderBarProps {
   title?: string
   subtitle?: string
@@ -8,9 +10,9 @@ interface HeaderBarProps {
   onOverviewClick?: () => void
 }
 
-export function HeaderBar({ 
-  title = "WORLD TOUR 2026-2027",
-  subtitle = "Premium Experience",
+export function HeaderBar({
+  title = DEFAULT_TITLE,
+  subtitle = DEFAULT_SUBTITLE,
   stats = { dates: 2, markets: 2 },
   onOverviewClick
 }: HeaderBarProps) {
