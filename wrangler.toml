@@ -44,15 +44,6 @@ not_found_handling = "single-page-application"
 # binding = "GEOCACHE"
 # id = "YOUR_GEOCACHE_ID"
 
-# -------------------------
-# Asset rules
-# -------------------------
-[[rules]]
-type = "Text"
-globs = ["**/*.html", "**/*.txt"]
-fallthrough = true
-
-[[rules]]
-type = "Data"
-globs = ["**/*"]
-fallthrough = true
+# No [[rules]] needed — worker.js is self-contained (no_bundle = true),
+# and static assets are served via [assets]. Rules with broad globs
+# cause wrangler to attach every file in the repo as modules.
