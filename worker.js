@@ -12,6 +12,90 @@ const SITE_AUTH_COOKIE = 'site_auth'
 /** Fallback branding (mirrors src/config/defaults.ts). */
 const DEFAULT_TITLE = 'WORLD TOUR 2026-2027'
 
+/** Default branding payload returned when no artist is resolved. */
+const DEFAULT_BRANDING = {
+  slug: null,
+  name: 'Platform',
+  title: DEFAULT_TITLE,
+  subtitle: 'Premium Experience',
+  accentColor: '#E7D1A7',
+  accentMuted: '#D4C1A0',
+  accentDark: '#C1AE8D',
+  logoUrl: null,
+}
+
+/**
+ * Parse hostname to determine site context.
+ * Returns { type: 'platform'|'admin'|'artist', artistSlug?: string }
+ *
+ * Rules:
+ *   - localhost / 127.0.0.1 / *.workers.dev / bare domain => platform
+ *   - admin.domain.com => admin
+ *   - <slug>.domain.com => artist (slug extracted)
+ *   - ?artist=<slug> query param override (dev convenience)
+ */
+function parseHostContext(url) {
+  const hostname = url.hostname
+
+  // Dev override via query param (works on localhost / workers.dev)
+  const artistParam = url.searchParams.get('artist')
+  if (artistParam && /^[a-z0-9-]+$/.test(artistParam)) {
+    return { type: 'artist', artistSlug: artistParam }
+  }
+
+  // localhost / IP / workers.dev => platform (no subdomain logic)
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.workers.dev')
+  ) {
+    return { type: 'platform' }
+  }
+
+  // Count domain parts: "sub.example.com" => 3 parts
+  const parts = hostname.split('.')
+  if (parts.length <= 2) {
+    // bare domain like "example.com" => platform
+    return { type: 'platform' }
+  }
+
+  // Subdomain is the first part
+  const sub = parts[0].toLowerCase()
+  if (sub === 'admin') return { type: 'admin' }
+  if (sub === 'www') return { type: 'platform' }
+
+  // Any other subdomain is treated as an artist slug
+  return { type: 'artist', artistSlug: sub }
+}
+
+/**
+ * Resolve artist branding from DB by slug.
+ * Returns branding payload object, or null if not found.
+ */
+async function resolveArtistBranding(DB, slug) {
+  if (!DB || !slug) return null
+  try {
+    const row = await DB.prepare(
+      `SELECT id, slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url FROM artists WHERE slug = ?`
+    ).bind(slug).first()
+    if (!row) return null
+    return {
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      title: row.title,
+      subtitle: row.subtitle || null,
+      accentColor: row.accent_color,
+      accentMuted: row.accent_muted || null,
+      accentDark: row.accent_dark || null,
+      logoUrl: row.logo_url || null,
+    }
+  } catch (err) {
+    console.error('[resolveArtistBranding]', err)
+    return null
+  }
+}
+
 function timingSafeEqual(a, b) {
   const aBytes = encoder.encode(a)
   const bBytes = encoder.encode(b)
@@ -387,16 +471,6 @@ function validateStopPayload(body, isUpdate) {
       notes: notes || null,
     },
   }
-}
-
-/** Paths that skip site gate (no recursion into gate). */
-function skipSiteGate(pathname) {
-  return (
-    pathname === '/auth/login' ||
-    pathname === '/auth/logout' ||
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/api/admin')
-  )
 }
 
 /** Client IP: prefer cf-connecting-ip, fallback x-forwarded-for; sanitize (trim, first if comma-separated). */
@@ -932,6 +1006,128 @@ export default {
         }
       }
 
+      // --- Admin artists CRUD ---
+      const adminArtistsMatch = url.pathname.match(/^\/api\/admin\/artists\/?(.*)$/)
+      if (adminArtistsMatch) {
+        const idSuffix = adminArtistsMatch[1]
+        const hasId = idSuffix.length > 0
+        const artistId = hasId ? decodeURIComponent(idSuffix) : null
+
+        // GET /api/admin/artists — list all
+        if (request.method === 'GET' && !hasId) {
+          try {
+            const { results } = await env.DB.prepare(
+              `SELECT id, slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url, created_at, updated_at
+               FROM artists ORDER BY name ASC`
+            ).all()
+            return jsonResponse(results ?? [])
+          } catch (err) {
+            console.error('[api/admin/artists GET]', err)
+            return jsonResponse({ error: 'Failed to fetch artists' }, 500)
+          }
+        }
+
+        // GET /api/admin/artists/:id — single
+        if (request.method === 'GET' && hasId && artistId) {
+          try {
+            const row = await env.DB.prepare(
+              `SELECT id, slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url, site_password, created_at, updated_at
+               FROM artists WHERE id = ?`
+            ).bind(artistId).first()
+            if (!row) return jsonResponse({ error: 'Artist not found' }, 404)
+            return jsonResponse(row)
+          } catch (err) {
+            console.error('[api/admin/artists GET :id]', err)
+            return jsonResponse({ error: 'Failed to fetch artist' }, 500)
+          }
+        }
+
+        // POST /api/admin/artists — create
+        if (request.method === 'POST' && !hasId) {
+          let body
+          try { body = await request.json() } catch { return jsonResponse({ error: 'Invalid JSON' }, 400) }
+          const slug = body && typeof body.slug === 'string' ? body.slug.trim().toLowerCase() : ''
+          const name = body && typeof body.name === 'string' ? body.name.trim() : ''
+          const title = body && typeof body.title === 'string' ? body.title.trim() : ''
+          if (!slug) return jsonResponse({ error: 'slug is required' }, 400)
+          if (!/^[a-z0-9-]+$/.test(slug)) return jsonResponse({ error: 'slug must be lowercase alphanumeric with hyphens only' }, 400)
+          if (slug === 'admin' || slug === 'www' || slug === 'api') return jsonResponse({ error: 'Reserved slug' }, 400)
+          if (!name) return jsonResponse({ error: 'name is required' }, 400)
+          if (!title) return jsonResponse({ error: 'title is required' }, 400)
+          const id = body.id ? String(body.id).trim() : crypto.randomUUID()
+          const accent_color = body.accent_color || body.accentColor || '#E7D1A7'
+          const accent_muted = body.accent_muted || body.accentMuted || null
+          const accent_dark = body.accent_dark || body.accentDark || null
+          const logo_url = body.logo_url || body.logoUrl || null
+          const subtitle = body.subtitle || null
+          const site_password = body.site_password || body.sitePassword || null
+          try {
+            await env.DB.prepare(
+              `INSERT INTO artists (id, slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url, site_password, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            ).bind(id, slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url, site_password).run()
+            const row = await env.DB.prepare('SELECT * FROM artists WHERE id = ?').bind(id).first()
+            return jsonResponse(row, 201)
+          } catch (err) {
+            if (err && err.message && /UNIQUE/i.test(err.message)) {
+              return jsonResponse({ error: 'An artist with this slug already exists' }, 409)
+            }
+            console.error('[api/admin/artists POST]', err)
+            return jsonResponse({ error: 'Failed to create artist' }, 500)
+          }
+        }
+
+        // PUT /api/admin/artists/:id — update
+        if (request.method === 'PUT' && hasId && artistId) {
+          let body
+          try { body = await request.json() } catch { return jsonResponse({ error: 'Invalid JSON' }, 400) }
+          const slug = body && typeof body.slug === 'string' ? body.slug.trim().toLowerCase() : ''
+          const name = body && typeof body.name === 'string' ? body.name.trim() : ''
+          const title = body && typeof body.title === 'string' ? body.title.trim() : ''
+          if (!slug) return jsonResponse({ error: 'slug is required' }, 400)
+          if (!/^[a-z0-9-]+$/.test(slug)) return jsonResponse({ error: 'slug must be lowercase alphanumeric with hyphens only' }, 400)
+          if (slug === 'admin' || slug === 'www' || slug === 'api') return jsonResponse({ error: 'Reserved slug' }, 400)
+          if (!name) return jsonResponse({ error: 'name is required' }, 400)
+          if (!title) return jsonResponse({ error: 'title is required' }, 400)
+          const accent_color = body.accent_color || body.accentColor || '#E7D1A7'
+          const accent_muted = body.accent_muted || body.accentMuted || null
+          const accent_dark = body.accent_dark || body.accentDark || null
+          const logo_url = body.logo_url || body.logoUrl || null
+          const subtitle = body.subtitle || null
+          const site_password = body.site_password || body.sitePassword || null
+          try {
+            const info = await env.DB.prepare(
+              `UPDATE artists SET slug = ?, name = ?, title = ?, subtitle = ?, accent_color = ?, accent_muted = ?, accent_dark = ?, logo_url = ?, site_password = ?, updated_at = datetime('now') WHERE id = ?`
+            ).bind(slug, name, title, subtitle, accent_color, accent_muted, accent_dark, logo_url, site_password, artistId).run()
+            if (info.meta.changes === 0) return jsonResponse({ error: 'Artist not found' }, 404)
+            const row = await env.DB.prepare('SELECT * FROM artists WHERE id = ?').bind(artistId).first()
+            return jsonResponse(row)
+          } catch (err) {
+            if (err && err.message && /UNIQUE/i.test(err.message)) {
+              return jsonResponse({ error: 'An artist with this slug already exists' }, 409)
+            }
+            console.error('[api/admin/artists PUT]', err)
+            return jsonResponse({ error: 'Failed to update artist' }, 500)
+          }
+        }
+
+        // DELETE /api/admin/artists/:id
+        if (request.method === 'DELETE' && hasId && artistId) {
+          try {
+            // Unlink stops before deleting
+            await env.DB.prepare('UPDATE stops SET artist_id = NULL WHERE artist_id = ?').bind(artistId).run()
+            const info = await env.DB.prepare('DELETE FROM artists WHERE id = ?').bind(artistId).run()
+            if (info.meta.changes === 0) return jsonResponse({ error: 'Artist not found' }, 404)
+            return jsonResponse({ ok: true })
+          } catch (err) {
+            console.error('[api/admin/artists DELETE]', err)
+            return jsonResponse({ error: 'Failed to delete artist' }, 500)
+          }
+        }
+
+        return jsonResponse({ error: 'Not Found' }, 404)
+      }
+
       // --- Admin stops CRUD ---
       const adminStopsMatch = url.pathname.match(/^\/api\/admin\/stops\/?(.*)$/)
       if (adminStopsMatch) {
@@ -1138,6 +1334,21 @@ export default {
       if (url.pathname.startsWith('/admin')) {
         if (request.method === 'GET' && env.DB) ctx.waitUntil(logPageAccess(env, request, url))
         return env.ASSETS.fetch(request)
+      }
+
+      // --- Public: GET /api/artist (returns branding for current hostname context) ---
+      if (request.method === 'GET' && url.pathname === '/api/artist') {
+        const hostCtx = parseHostContext(url)
+        if (hostCtx.type === 'artist' && hostCtx.artistSlug) {
+          const branding = await resolveArtistBranding(env.DB, hostCtx.artistSlug)
+          if (branding) {
+            return jsonResponse(branding)
+          }
+          // Unknown artist slug: return 404 with default branding hint
+          return jsonResponse({ error: 'Artist not found', default: DEFAULT_BRANDING }, 404)
+        }
+        // Platform or admin context: return default branding
+        return jsonResponse(DEFAULT_BRANDING)
       }
 
       // Site gate: require valid site_auth cookie (skip /auth/login, /auth/logout, /admin, /api/admin)
