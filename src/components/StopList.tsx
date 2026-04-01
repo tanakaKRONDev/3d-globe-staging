@@ -38,14 +38,14 @@ export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps)
                   ? '1px solid var(--accent)'
                   : '1px solid var(--border)',
                 background: isSelected
-                  ? 'rgba(231, 209, 167, 0.05)'
+                  ? 'rgba(var(--accent-rgb), 0.05)'
                   : 'rgba(12, 16, 24, 0.35)',
                 borderRadius: 'var(--radius-md)',
                 transition: 'all var(--transition-fast)',
                 cursor: hasCoords ? 'pointer' : 'not-allowed',
                 opacity: hasCoords ? 1 : 0.6,
                 boxShadow: isSelected
-                  ? '0 0 20px rgba(231, 209, 167, 0.1)'
+                  ? '0 0 20px rgba(var(--accent-rgb), 0.1)'
                   : 'none',
               }}
             >

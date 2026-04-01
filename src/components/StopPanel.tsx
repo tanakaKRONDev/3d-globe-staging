@@ -56,7 +56,7 @@ export function StopPanel({ stop, onCollapseToggle, buildingsPendingUpdate }: St
               fontSize: 'var(--font-size-xs)',
               fontFamily: 'var(--font-family-mono)',
               color: 'var(--accent)',
-              background: 'rgba(231, 209, 167, 0.1)',
+              background: 'rgba(var(--accent-rgb), 0.1)',
               padding: 'var(--space-1) var(--space-2)',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border)',

@@ -27,12 +27,28 @@ export function useArtist(): ArtistContextValue {
   return useContext(ArtistContext)
 }
 
-/** Apply artist accent colors as CSS custom properties on :root. */
+/** Parse hex color to "r, g, b" string for use in rgba(). */
+function hexToRgb(hex: string): string {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16)
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+}
+
+/** Apply artist accent colors + data attribute on :root. */
 function applyAccentVars(artist: Artist) {
-  const root = document.documentElement.style
+  const el = document.documentElement
+  const root = el.style
   root.setProperty('--accent', artist.accentColor)
+  root.setProperty('--accent-rgb', hexToRgb(artist.accentColor))
   if (artist.accentMuted) root.setProperty('--accent-muted', artist.accentMuted)
   if (artist.accentDark) root.setProperty('--accent-dark', artist.accentDark)
+
+  // Set data-artist attribute for CSS scoping
+  if (artist.slug) {
+    el.setAttribute('data-artist', artist.slug)
+  } else {
+    el.removeAttribute('data-artist')
+  }
 }
 
 export function ArtistProvider({ children }: { children: ReactNode }) {

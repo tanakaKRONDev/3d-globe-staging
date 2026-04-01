@@ -20,10 +20,15 @@ export function HeaderBar({
   const displayTitle = title ?? artist.title
   const displaySubtitle = subtitle ?? artist.subtitle
 
+  const isArtist = !!artist.slug
+
   return (
     <div className="header-container">
       {/* Main Title Header */}
       <div className="main-header">
+        {isArtist && (
+          <div className="artist-wordmark">{artist.name}</div>
+        )}
         <h1 className="main-title">{displayTitle}</h1>
         {displaySubtitle && <p className="main-subtitle">{displaySubtitle}</p>}
       </div>

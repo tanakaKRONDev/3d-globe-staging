@@ -1,0 +1,80 @@
+/*
+ * Artist shell branding overrides.
+ *
+ * When [data-artist] is set on <html>, the UI shell panels get
+ * a tinted treatment using the artist's --accent color via --accent-rgb.
+ * The globe, arcs, buildings, and universe are NOT affected.
+ */
+
+/* ─── Artist-branded panels ─── */
+[data-artist] .glass-panel,
+[data-artist] .glass-panel-subtle {
+  background: rgba(var(--accent-rgb), 0.06);
+  border-color: rgba(var(--accent-rgb), 0.15);
+}
+
+[data-artist] .glass-panel:hover {
+  background: rgba(var(--accent-rgb), 0.10);
+  border-color: rgba(var(--accent-rgb), 0.25);
+}
+
+/* Summary strip */
+[data-artist] .summary-strip {
+  background: rgba(var(--accent-rgb), 0.06);
+  border-color: rgba(var(--accent-rgb), 0.15);
+}
+
+[data-artist] .summary-strip__item strong {
+  color: var(--accent);
+}
+
+/* Stat chips */
+[data-artist] .stat-chip {
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.18);
+}
+
+[data-artist] .stat-chip-value {
+  color: var(--accent);
+}
+
+/* Overview button */
+[data-artist] .overview-button {
+  background: rgba(var(--accent-rgb), 0.10);
+  border-color: rgba(var(--accent-rgb), 0.20);
+  color: var(--accent);
+}
+
+[data-artist] .overview-button:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: rgba(var(--accent-rgb), 0.35);
+  color: var(--accent);
+}
+
+/* Title treatment */
+[data-artist] .main-title {
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(255, 255, 255, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Marker tooltip */
+[data-artist] .marker-tooltip {
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.20);
+}
+
+/* Stop panel: accent-tinted country badge */
+[data-artist] .stop-panel .glass-panel {
+  background: rgba(var(--accent-rgb), 0.06);
+  border-color: rgba(var(--accent-rgb), 0.15);
+}
+
+/* Stop list cards: subtle accent border on hover */
+[data-artist] .stop-list__card:hover {
+  border-color: rgba(var(--accent-rgb), 0.30);
+}
+
+/* ─── Platform (default) refinements ─── */
+/* No [data-artist] attribute — keep existing dark glass unchanged */
