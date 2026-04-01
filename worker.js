@@ -1380,15 +1380,33 @@ export default {
         })
       }
 
-      // Gated: GET /api/stops
+      // Gated: GET /api/stops (artist-aware: subdomain scopes to artist's stops)
       if (request.method === 'GET' && url.pathname === '/api/stops') {
         try {
-          const { results } = await env.DB.prepare(
-            `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
-             FROM stops
-             ORDER BY stop_order ASC`
-          ).all()
-          return new Response(JSON.stringify(results ?? []), {
+          const hostCtx = parseHostContext(url)
+          let results
+          if (hostCtx.type === 'artist' && hostCtx.artistSlug) {
+            // Artist subdomain: only stops linked to this artist
+            const artist = await env.DB.prepare('SELECT id FROM artists WHERE slug = ?').bind(hostCtx.artistSlug).first()
+            if (artist) {
+              const q = await env.DB.prepare(
+                `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+                 FROM stops WHERE artist_id = ? ORDER BY stop_order ASC`
+              ).bind(artist.id).all()
+              results = q.results ?? []
+            } else {
+              // Unknown artist slug: return empty set (not an error — frontend handles gracefully)
+              results = []
+            }
+          } else {
+            // Platform/admin: return all stops with NULL artist_id (platform stops)
+            const q = await env.DB.prepare(
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+               FROM stops WHERE artist_id IS NULL ORDER BY stop_order ASC`
+            ).all()
+            results = q.results ?? []
+          }
+          return new Response(JSON.stringify(results), {
             status: 200,
             headers: {
               'Content-Type': 'application/json',
