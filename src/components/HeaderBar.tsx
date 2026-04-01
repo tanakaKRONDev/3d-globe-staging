@@ -1,4 +1,4 @@
-import { DEFAULT_TITLE, DEFAULT_SUBTITLE } from '../config/defaults'
+import { useArtist } from '../context/ArtistContext'
 
 interface HeaderBarProps {
   title?: string
@@ -11,17 +11,21 @@ interface HeaderBarProps {
 }
 
 export function HeaderBar({
-  title = DEFAULT_TITLE,
-  subtitle = DEFAULT_SUBTITLE,
+  title,
+  subtitle,
   stats = { dates: 2, markets: 2 },
   onOverviewClick
 }: HeaderBarProps) {
+  const { artist } = useArtist()
+  const displayTitle = title ?? artist.title
+  const displaySubtitle = subtitle ?? artist.subtitle
+
   return (
     <div className="header-container">
       {/* Main Title Header */}
       <div className="main-header">
-        <h1 className="main-title">{title}</h1>
-        <p className="main-subtitle">{subtitle}</p>
+        <h1 className="main-title">{displayTitle}</h1>
+        {displaySubtitle && <p className="main-subtitle">{displaySubtitle}</p>}
       </div>
       
       {/* Stats and Controls Section */}

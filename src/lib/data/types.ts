@@ -20,6 +20,18 @@ export interface Stop {
   bullets: StopBullets | string[]
 }
 
+export interface Artist {
+  id?: string
+  slug: string | null
+  name: string
+  title: string
+  subtitle: string | null
+  accentColor: string
+  accentMuted: string | null
+  accentDark: string | null
+  logoUrl: string | null
+}
+
 export type Scenario = 'base' | 'upside'
 
 export interface StopDetails {

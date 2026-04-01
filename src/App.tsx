@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import type { Viewer } from 'cesium'
 import type { PremiumCameraManager } from './lib/cesium/cameraUtils'
+import { useArtist } from './context/ArtistContext'
 import { Globe } from './components/Globe'
 import { HeaderBar } from './components/HeaderBar'
 import { SummaryStrip } from './components/SummaryStrip'
@@ -20,6 +21,7 @@ export type ViewMode = 'overview' | 'venue'
 
 function App() {
   useBodyClass('mode-globe')
+  const { artist } = useArtist()
   const [stops, setStops] = useState<Stop[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('overview')
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null)
@@ -85,6 +87,11 @@ function App() {
       }, 800)
     }
   }, [dataLoaded, imageryReady, viewerReady])
+
+  // Sync document title with artist branding
+  useEffect(() => {
+    document.title = artist.title
+  }, [artist.title])
 
   const selectedStop = stops.find(stop => stop.id === selectedStopId) || null
 

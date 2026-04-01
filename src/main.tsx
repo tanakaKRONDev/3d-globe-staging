@@ -10,6 +10,7 @@ import { AdminErrorBoundary } from './components/admin/AdminErrorBoundary'
 import { AdminPage } from './pages/AdminPage'
 import { AdminLogsPage } from './pages/AdminLogsPage'
 import { AdminBlockedPage } from './pages/AdminBlockedPage'
+import { ArtistProvider } from './context/ArtistContext'
 import './styles/tokens.css'
 import './styles/theme.css'
 import './styles/admin.css'
@@ -20,13 +21,15 @@ installTokenlessGuardrails()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
-        <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
-        <Route path="/admin/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
-      </Routes>
-    </BrowserRouter>
+    <ArtistProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
+          <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
+          <Route path="/admin/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
+        </Routes>
+      </BrowserRouter>
+    </ArtistProvider>
   </React.StrictMode>
 )
