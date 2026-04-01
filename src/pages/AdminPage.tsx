@@ -23,6 +23,13 @@ export interface AdminStop {
   lng: number
   timeline?: string | null
   notes?: string | null
+  artist_id?: string | null
+}
+
+interface AdminArtistOption {
+  id: string
+  slug: string
+  name: string
 }
 
 const API = '/api/admin'
@@ -85,6 +92,7 @@ export function AdminPage() {
   const [rollingBack, setRollingBack] = useState(false)
   const [rollbackModalOpen, setRollbackModalOpen] = useState(false)
   const rollbackModalRef = useRef<HTMLDialogElement>(null)
+  const [artistOptions, setArtistOptions] = useState<AdminArtistOption[]>([])
   const [geoCandidates, setGeoCandidates] = useState<
     Array<{ displayName: string; lat: number; lng: number; city?: string; state?: string; postcode?: string; countryCode?: string }>
   >([])
@@ -119,6 +127,15 @@ export function AdminPage() {
       if (verRes.ok) {
         const verData = (await verRes.json()) as Array<{ id: string; created_at: string }>
         setVersions(Array.isArray(verData) ? verData : [])
+      }
+    } catch {
+      // non-fatal
+    }
+    try {
+      const artRes = await adminFetch('/artists')
+      if (artRes.ok) {
+        const artData = (await artRes.json()) as AdminArtistOption[]
+        setArtistOptions(Array.isArray(artData) ? artData.map(a => ({ id: a.id, slug: a.slug, name: a.name })) : [])
       }
     } catch {
       // non-fatal
@@ -468,6 +485,7 @@ export function AdminPage() {
         lng,
         timeline: selectedStop.timeline ?? '',
         notes: selectedStop.notes ?? '',
+        artist_id: selectedStop.artist_id ?? null,
       }
       if (editingNew) {
         if (!selectedStop.id.trim()) {
@@ -949,6 +967,19 @@ export function AdminPage() {
                       placeholder="Lng"
                     />
                   </div>
+                </label>
+                <label className="admin-page__label span2">
+                  Artist
+                  <select
+                    value={selectedStop.artist_id ?? ''}
+                    onChange={(e) => updateField('artist_id', e.target.value || null)}
+                    className="admin-page__input admin-page__select"
+                  >
+                    <option value="">Platform (default)</option>
+                    {artistOptions.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({a.slug})</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="admin-page__label span2">
                   Timeline

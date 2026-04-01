@@ -1138,7 +1138,7 @@ export default {
         if (request.method === 'GET' && !hasId) {
           try {
             const { results } = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id
                FROM stops
                ORDER BY stop_order ASC`
             ).all()
@@ -1159,13 +1159,14 @@ export default {
           const v = validateStopPayload(body, false)
           if (!v.ok) return jsonResponse({ error: v.error }, v.status)
           const d = v.data
+          const artistId = body.artist_id != null ? String(body.artist_id) : null
           try {
             await env.DB.prepare(
-              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-            ).bind(d.id, d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes).run()
+              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, artist_id, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            ).bind(d.id, d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, artistId).run()
             const row = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes FROM stops WHERE id = ?`
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id FROM stops WHERE id = ?`
             ).bind(d.id).first()
             await saveStopsSnapshot(env)
             return jsonResponse(row ?? { id: d.id, order: d.stop_order, city: d.city, country: d.country, venue: d.venue, address: d.address, lat: d.lat, lng: d.lng, timeline: d.timeline, notes: d.notes })
@@ -1228,15 +1229,21 @@ export default {
           const v = validateStopPayload(body, true)
           if (!v.ok) return jsonResponse({ error: v.error }, v.status)
           const d = v.data
+          const artistId = body.artist_id !== undefined ? (body.artist_id ? String(body.artist_id) : null) : undefined
           try {
-            const info = await env.DB.prepare(
-              `UPDATE stops SET stop_order = ?, city = ?, country = ?, venue = ?, address = ?, lat = ?, lng = ?, timeline = ?, notes = ?, updated_at = datetime('now') WHERE id = ?`
-            ).bind(d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, id).run()
-            if (info.meta.changes === 0) {
-              return jsonResponse({ error: 'Stop not found' }, 404)
+            if (artistId !== undefined) {
+              const info = await env.DB.prepare(
+                `UPDATE stops SET stop_order = ?, city = ?, country = ?, venue = ?, address = ?, lat = ?, lng = ?, timeline = ?, notes = ?, artist_id = ?, updated_at = datetime('now') WHERE id = ?`
+              ).bind(d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, artistId, id).run()
+              if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
+            } else {
+              const info = await env.DB.prepare(
+                `UPDATE stops SET stop_order = ?, city = ?, country = ?, venue = ?, address = ?, lat = ?, lng = ?, timeline = ?, notes = ?, updated_at = datetime('now') WHERE id = ?`
+              ).bind(d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, id).run()
+              if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
             }
             const row = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes FROM stops WHERE id = ?`
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id FROM stops WHERE id = ?`
             ).bind(id).first()
             await saveStopsSnapshot(env)
             return jsonResponse(row)

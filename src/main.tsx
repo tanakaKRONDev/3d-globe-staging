@@ -10,6 +10,7 @@ import { AdminErrorBoundary } from './components/admin/AdminErrorBoundary'
 import { AdminPage } from './pages/AdminPage'
 import { AdminLogsPage } from './pages/AdminLogsPage'
 import { AdminBlockedPage } from './pages/AdminBlockedPage'
+import { AdminArtistsPage } from './pages/AdminArtistsPage'
 import { ArtistProvider } from './context/ArtistContext'
 import './styles/tokens.css'
 import './styles/theme.css'
@@ -28,6 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
           <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
           <Route path="/admin/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
+          <Route path="/admin/artists" element={<AdminErrorBoundary><AdminArtistsPage /></AdminErrorBoundary>} />
         </Routes>
       </BrowserRouter>
     </ArtistProvider>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, RotateCcw, LogOut, FileText, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, RotateCcw, LogOut, FileText, ShieldAlert, Palette } from 'lucide-react'
 
 export interface AdminTopBarProps {
   title?: string
@@ -7,9 +7,10 @@ export interface AdminTopBarProps {
   onLogout?: () => void
   showLogsLink?: boolean
   showBlockedLink?: boolean
+  showArtistsLink?: boolean
 }
 
-export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogout, showLogsLink = true, showBlockedLink = true }: AdminTopBarProps) {
+export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogout, showLogsLink = true, showBlockedLink = true, showArtistsLink = true }: AdminTopBarProps) {
   return (
     <header className="admin-topbar">
       <div className="admin-topbar__left">
@@ -19,6 +20,11 @@ export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogo
         <h1 className="admin-topbar__title">{title}</h1>
       </div>
       <div className="admin-topbar__actions">
+        {showArtistsLink && (
+          <Link to="/admin/artists" className="admin-topbar__btn admin-topbar__btn--secondary">
+            <Palette size={18} /> Artists
+          </Link>
+        )}
         {showLogsLink && (
           <Link to="/admin/logs" className="admin-topbar__btn admin-topbar__btn--secondary">
             <FileText size={18} /> Logs
