@@ -13,6 +13,7 @@ export interface Stop {
   region?: string
   address?: string
   notes?: string
+  icon?: string
   capacityMin?: number | null
   capacityMax?: number | null
   lat: number | null
