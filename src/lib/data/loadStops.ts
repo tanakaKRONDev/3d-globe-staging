@@ -18,6 +18,7 @@ function normalizeStop(raw: Record<string, unknown>): Stop {
     region: raw.region != null ? String(raw.region) : undefined,
     address: raw.address != null ? String(raw.address) : undefined,
     notes: raw.notes != null ? String(raw.notes) : undefined,
+    icon: raw.icon != null ? String(raw.icon) : undefined,
     lat: raw.lat != null && Number.isFinite(Number(raw.lat)) ? Number(raw.lat) : null,
     lng: raw.lng != null && Number.isFinite(Number(raw.lng)) ? Number(raw.lng) : null,
     capacityMin: raw.capacityMin != null ? Number(raw.capacityMin) : undefined,
