@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
+import { STOP_ICON_KEYS, STOP_ICON_LABELS } from '../lib/icons/stopIcons'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { AddressInput } from '../components/admin/AddressInput'
@@ -24,6 +25,7 @@ export interface AdminStop {
   timeline?: string | null
   notes?: string | null
   artist_id?: string | null
+  icon?: string | null
 }
 
 interface AdminArtistOption {
@@ -498,6 +500,7 @@ export function AdminPage() {
         timeline: selectedStop.timeline ?? '',
         notes: selectedStop.notes ?? '',
         artist_id: selectedStop.artist_id ?? null,
+        icon: selectedStop.icon ?? null,
       }
       if (editingNew) {
         if (!selectedStop.id.trim()) {
@@ -993,7 +996,19 @@ export function AdminPage() {
                     ))}
                   </select>
                 </label>
-                <label className="admin-page__label span2">
+                <label className="admin-page__label">
+                  Marker Icon
+                  <select
+                    value={selectedStop.icon ?? 'default'}
+                    onChange={(e) => updateField('icon', e.target.value === 'default' ? null : e.target.value)}
+                    className="admin-page__input admin-page__select"
+                  >
+                    {STOP_ICON_KEYS.map((key) => (
+                      <option key={key} value={key}>{STOP_ICON_LABELS[key]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-page__label">
                   Timeline
                   <input
                     type="text"

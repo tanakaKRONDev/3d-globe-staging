@@ -618,7 +618,7 @@ export default {
       async function saveStopsSnapshot(env) {
         try {
           const { results: stops } = await env.DB.prepare(
-            `SELECT id, stop_order, city, country, venue, address, lat, lng, timeline, notes FROM stops ORDER BY stop_order ASC`
+            `SELECT id, stop_order, city, country, venue, address, lat, lng, timeline, notes, icon FROM stops ORDER BY stop_order ASC`
           ).all()
           const snapshot = JSON.stringify(stops ?? [])
           const versionId = crypto.randomUUID()
@@ -829,11 +829,12 @@ export default {
             const lng = Number(s.lng)
             const timeline = s.timeline ?? null
             const notes = s.notes ?? null
+            const icon = s.icon ?? null
             if (!id || !Number.isFinite(lat) || !Number.isFinite(lng)) continue
             await env.DB.prepare(
-              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, icon, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
             )
-              .bind(id, stop_order, city, country, venue, address, lat, lng, timeline, notes)
+              .bind(id, stop_order, city, country, venue, address, lat, lng, timeline, notes, icon)
               .run()
           }
           return jsonResponse({ ok: true })
@@ -1157,7 +1158,7 @@ export default {
         if (request.method === 'GET' && !hasId) {
           try {
             const { results } = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id, icon
                FROM stops
                ORDER BY stop_order ASC`
             ).all()
@@ -1179,13 +1180,14 @@ export default {
           if (!v.ok) return jsonResponse({ error: v.error }, v.status)
           const d = v.data
           const artistId = body.artist_id != null ? String(body.artist_id) : null
+          const icon = body.icon != null ? String(body.icon) : null
           try {
             await env.DB.prepare(
-              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, artist_id, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-            ).bind(d.id, d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, artistId).run()
+              `INSERT INTO stops (id, stop_order, city, country, venue, address, lat, lng, timeline, notes, artist_id, icon, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            ).bind(d.id, d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, artistId, icon).run()
             const row = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id FROM stops WHERE id = ?`
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id, icon FROM stops WHERE id = ?`
             ).bind(d.id).first()
             await saveStopsSnapshot(env)
             return jsonResponse(row ?? { id: d.id, order: d.stop_order, city: d.city, country: d.country, venue: d.venue, address: d.address, lat: d.lat, lng: d.lng, timeline: d.timeline, notes: d.notes })
@@ -1227,7 +1229,7 @@ export default {
             await env.DB.batch(statements)
             await saveStopsSnapshot(env)
             const { results: stops } = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, icon
                FROM stops
                ORDER BY stop_order ASC`
             ).all()
@@ -1249,20 +1251,20 @@ export default {
           if (!v.ok) return jsonResponse({ error: v.error }, v.status)
           const d = v.data
           const artistId = body.artist_id !== undefined ? (body.artist_id ? String(body.artist_id) : null) : undefined
+          const icon = body.icon !== undefined ? (body.icon ? String(body.icon) : null) : undefined
           try {
-            if (artistId !== undefined) {
-              const info = await env.DB.prepare(
-                `UPDATE stops SET stop_order = ?, city = ?, country = ?, venue = ?, address = ?, lat = ?, lng = ?, timeline = ?, notes = ?, artist_id = ?, updated_at = datetime('now') WHERE id = ?`
-              ).bind(d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, artistId, id).run()
-              if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
-            } else {
-              const info = await env.DB.prepare(
-                `UPDATE stops SET stop_order = ?, city = ?, country = ?, venue = ?, address = ?, lat = ?, lng = ?, timeline = ?, notes = ?, updated_at = datetime('now') WHERE id = ?`
-              ).bind(d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes, id).run()
-              if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
-            }
+            const setClauses = ['stop_order = ?', 'city = ?', 'country = ?', 'venue = ?', 'address = ?', 'lat = ?', 'lng = ?', 'timeline = ?', 'notes = ?']
+            const bindValues = [d.stop_order, d.city, d.country, d.venue, d.address, d.lat, d.lng, d.timeline, d.notes]
+            if (artistId !== undefined) { setClauses.push('artist_id = ?'); bindValues.push(artistId) }
+            if (icon !== undefined) { setClauses.push('icon = ?'); bindValues.push(icon) }
+            setClauses.push("updated_at = datetime('now')")
+            bindValues.push(id)
+            const info = await env.DB.prepare(
+              `UPDATE stops SET ${setClauses.join(', ')} WHERE id = ?`
+            ).bind(...bindValues).run()
+            if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
             const row = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id FROM stops WHERE id = ?`
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, artist_id, icon FROM stops WHERE id = ?`
             ).bind(id).first()
             await saveStopsSnapshot(env)
             return jsonResponse(row)
@@ -1416,7 +1418,7 @@ export default {
             const artist = await env.DB.prepare('SELECT id FROM artists WHERE slug = ?').bind(hostCtx.artistSlug).first()
             if (artist) {
               const q = await env.DB.prepare(
-                `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+                `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, icon
                  FROM stops WHERE artist_id = ? ORDER BY stop_order ASC`
               ).bind(artist.id).all()
               results = q.results ?? []
@@ -1427,7 +1429,7 @@ export default {
           } else {
             // Platform: return ALL stops (the platform is the global view)
             const q = await env.DB.prepare(
-              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
+              `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes, icon
                FROM stops ORDER BY stop_order ASC`
             ).all()
             results = q.results ?? []

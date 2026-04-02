@@ -17,13 +17,14 @@ import {
   Color
 } from 'cesium'
 import type { Stop } from '../data/types'
+import { drawStopIcon, type StopIconKey } from '../icons/stopIcons'
 
 /**
- * Draw a clean circular marker badge.
- * Unselected: dark circle with light ring + center dot.
- * Selected: accent-filled circle with bright center.
+ * Draw a clean circular marker badge with a venue-type icon inside.
+ * Unselected: dark circle with light ring + icon in light color.
+ * Selected: accent-filled circle with icon in dark color.
  */
-export function createMarkerCanvas(isSelected = false): HTMLCanvasElement {
+export function createMarkerCanvas(isSelected = false, icon: StopIconKey = 'default'): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   const size = 40
   const scale = 2
@@ -64,11 +65,8 @@ export function createMarkerCanvas(isSelected = false): HTMLCanvasElement {
     ctx.arc(cx, cy, r, 0, Math.PI * 2)
     ctx.stroke()
 
-    // Center icon: small crosshair/dot
-    ctx.fillStyle = 'rgba(10, 14, 20, 0.85)'
-    ctx.beginPath()
-    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2)
-    ctx.fill()
+    // Icon in dark color (reads against bright accent fill)
+    drawStopIcon(ctx, icon, cx, cy, 'rgba(10, 14, 20, 0.85)')
   } else {
     // Dark filled circle
     ctx.fillStyle = 'rgba(18, 24, 36, 0.85)'
@@ -83,18 +81,8 @@ export function createMarkerCanvas(isSelected = false): HTMLCanvasElement {
     ctx.arc(cx, cy, r, 0, Math.PI * 2)
     ctx.stroke()
 
-    // Inner ring
-    ctx.strokeStyle = 'rgba(200, 210, 225, 0.25)'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.arc(cx, cy, r - 4, 0, Math.PI * 2)
-    ctx.stroke()
-
-    // Center dot
-    ctx.fillStyle = 'rgba(200, 210, 225, 0.8)'
-    ctx.beginPath()
-    ctx.arc(cx, cy, 2.5, 0, Math.PI * 2)
-    ctx.fill()
+    // Icon in light color (reads against dark fill)
+    drawStopIcon(ctx, icon, cx, cy, 'rgba(200, 210, 225, 0.8)')
   }
 
   return canvas
@@ -103,7 +91,8 @@ export function createMarkerCanvas(isSelected = false): HTMLCanvasElement {
 
 export function createVenueMarker(stop: Stop, isSelected = false): Entity {
   const position = Cartesian3.fromDegrees(stop.lng ?? 0, stop.lat ?? 0)
-  const canvas = createMarkerCanvas(isSelected)
+  const icon = (stop.icon as StopIconKey) || 'default'
+  const canvas = createMarkerCanvas(isSelected, icon)
 
   const entity = new Entity({
     id: stop.id,
@@ -246,8 +235,9 @@ export class VenueMarkerManager {
 
       if (existingMarker) {
         // Update billboard + label for selection state
+        const stopIcon = (stop.icon as StopIconKey) || 'default'
         if (existingMarker.billboard) {
-          existingMarker.billboard.image = new ConstantProperty(createMarkerCanvas(isSelected))
+          existingMarker.billboard.image = new ConstantProperty(createMarkerCanvas(isSelected, stopIcon))
         }
         if (existingMarker.label) {
           existingMarker.label.fillColor = new ConstantProperty(
@@ -268,8 +258,10 @@ export class VenueMarkerManager {
   updateSelection(selectedStopId: string | null): void {
     for (const [stopId, entity] of this.markers) {
       const isSelected = stopId === selectedStopId
+      const stop = this.stopData.get(stopId)
+      const stopIcon = (stop?.icon as StopIconKey) || 'default'
       if (entity.billboard) {
-        entity.billboard.image = new ConstantProperty(createMarkerCanvas(isSelected))
+        entity.billboard.image = new ConstantProperty(createMarkerCanvas(isSelected, stopIcon))
       }
       if (entity.label) {
         entity.label.fillColor = new ConstantProperty(
