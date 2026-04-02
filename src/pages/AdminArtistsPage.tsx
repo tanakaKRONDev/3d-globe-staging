@@ -430,9 +430,10 @@ export function AdminArtistsPage() {
                       />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <input
+                          id="logo-file-input"
                           type="file"
                           accept="image/*"
-                          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}
+                          style={{ position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}
                           onChange={(e) => {
                             const file = e.target.files?.[0]
                             if (!file) return
@@ -449,12 +450,33 @@ export function AdminArtistsPage() {
                             reader.readAsDataURL(file)
                           }}
                         />
+                        <button
+                          type="button"
+                          className="admin-page__btn admin-page__btn--secondary"
+                          style={{ minHeight: 36, padding: '6px 14px', fontSize: 'var(--font-size-sm)' }}
+                          onClick={() => document.getElementById('logo-file-input')?.click()}
+                        >
+                          <Palette size={14} /> Upload image
+                        </button>
+                        {selected.logo_url?.startsWith('data:') && (
+                          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>Uploaded (base64)</span>
+                        )}
                         {selected.logo_url && (
                           <img
                             src={selected.logo_url}
                             alt="Logo preview"
                             style={{ height: 32, maxWidth: 120, objectFit: 'contain', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }}
                           />
+                        )}
+                        {selected.logo_url && (
+                          <button
+                            type="button"
+                            className="admin-page__inline-btn"
+                            onClick={() => updateField('logo_url', null)}
+                            style={{ fontSize: 'var(--font-size-xs)' }}
+                          >
+                            Clear
+                          </button>
                         )}
                       </div>
                     </div>

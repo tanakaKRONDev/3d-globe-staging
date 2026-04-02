@@ -988,7 +988,7 @@ export function AdminPage() {
                     className="admin-page__input admin-page__select"
                   >
                     <option value="">Platform (default)</option>
-                    {artistOptions.map((a) => (
+                    {artistOptions.filter((a) => a.slug !== 'default').map((a) => (
                       <option key={a.id} value={a.id}>{a.name} ({a.slug})</option>
                     ))}
                   </select>
