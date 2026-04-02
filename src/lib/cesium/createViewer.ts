@@ -7,6 +7,9 @@ import {
   ConstantProperty,
   ScreenSpaceEventType,
   SunLight,
+  SkyBox,
+  Sun,
+  Moon,
 } from 'cesium'
 import type { ImageryLayer } from 'cesium'
 import { installDayNightImagery } from './globeImagery'
@@ -121,6 +124,12 @@ export async function createViewer(container: HTMLElement, creditContainer?: HTM
   const globe = viewer.scene.globe as Record<string, unknown>
   if ('dynamicAtmosphereLighting' in globe) globe.dynamicAtmosphereLighting = true
   if ('dynamicAtmosphereLightingFromSun' in globe) globe.dynamicAtmosphereLightingFromSun = true
+
+  // Universe background: built-in Cesium starmap, sun with bloom, moon (all free/local)
+  viewer.scene.skyBox = SkyBox.createEarthSkyBox()
+  viewer.scene.sun = new Sun()
+  viewer.scene.sunBloom = true
+  viewer.scene.moon = new Moon()
 
   // Premium atmosphere settings (tokenless)
   viewer.scene.globe.show = true
