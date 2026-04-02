@@ -233,29 +233,33 @@ body {
 
 /* Premium Component Styles */
 .stat-chip {
-  background: var(--color-glass-bg);
+  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: var(--blur-md);
   -webkit-backdrop-filter: var(--blur-md);
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
 .stat-chip:hover {
-  border-color: var(--color-glass-border-hover);
-  color: var(--color-text-primary);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
 }
 
 .stat-chip-value {
-  color: var(--color-champagne);
-  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
   margin-left: var(--spacing-xs);
+  text-transform: none;
+  letter-spacing: -0.01em;
 }
 
 /* Legacy header styles - replaced by layout.css main-header styles */

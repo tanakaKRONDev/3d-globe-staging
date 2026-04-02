@@ -38,53 +38,44 @@ export function StopPanel({ stop, onCollapseToggle, buildingsPendingUpdate }: St
         </button>
       )}
 
-      {/* Header: City, Country, Timeline, Venue */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
-          <h2
-            style={{
-              fontSize: 'var(--font-size-2xl)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: 'var(--text)',
-              letterSpacing: 'var(--letter-spacing-tight)',
-            }}
-          >
-            {stop.city}
-          </h2>
-          <span
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              fontFamily: 'var(--font-family-mono)',
-              color: 'var(--accent)',
-              background: 'rgba(var(--accent-rgb), 0.1)',
-              padding: 'var(--space-1) var(--space-2)',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            {stop.countryCode}
-          </span>
+      {/* Header: City headline + Venue */}
+      <div style={{ marginBottom: 'var(--space-5)' }}>
+        <h2
+          style={{
+            fontSize: '2.25rem',
+            fontWeight: 700,
+            color: 'var(--text)',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.1,
+            textTransform: 'uppercase',
+            margin: '0 0 var(--space-4) 0',
+            borderBottom: '1px solid var(--border)',
+            paddingBottom: 'var(--space-4)',
+          }}
+        >
+          {stop.city}
+        </h2>
+        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 'var(--space-1)' }}>
+          Venue:
         </div>
-        {timeline && (
-          <div
-            style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--accent-muted)',
-              marginBottom: 'var(--space-2)',
-            }}
-          >
-            {timeline}
-          </div>
-        )}
         <h3
           style={{
-            fontSize: 'var(--font-size-lg)',
-            color: 'var(--accent-muted)',
-            fontWeight: 'var(--font-weight-medium)',
+            fontSize: '1.15rem',
+            color: 'var(--text)',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.02em',
+            margin: 0,
           }}
         >
           {stop.venue}
         </h3>
+        {timeline && (
+          <div style={{ marginTop: 'var(--space-3)' }}>
+            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Timeline:</div>
+            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>{timeline}</div>
+          </div>
+        )}
         {SHOW_COORDINATES_IN_PANEL && stop.lat != null && stop.lng != null && (
           <div
             style={{
