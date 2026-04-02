@@ -59,7 +59,10 @@ export function ArtistProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     async function fetchBranding() {
       try {
-        const res = await fetch('/api/artist')
+        // Forward ?artist= param from page URL so worker can resolve context
+        const artistParam = new URLSearchParams(window.location.search).get('artist')
+        const apiUrl = artistParam ? `/api/artist?artist=${encodeURIComponent(artistParam)}` : '/api/artist'
+        const res = await fetch(apiUrl)
         if (!res.ok) {
           console.warn('[ArtistContext] /api/artist returned', res.status)
           return

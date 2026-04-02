@@ -23,5 +23,31 @@ In development mode (`vite dev`), runtime guardrails in
 
 These guardrails are tree-shaken out of production builds.
 
+## Artist subdomains
+
+### What works now
+- **Query param override:** `?artist=demo` on any environment (localhost, workers.dev, custom domain)
+  - Frontend forwards `?artist=` to `/api/artist` and `/api/stops`
+  - Worker resolves artist branding and scopes stops accordingly
+- **Custom domain subdomains:** `demo.yourdomain.com` (requires setup below)
+
+### What does NOT work
+- **Nested workers.dev subdomains:** `demo.3d-globe-staging.dream-dev-325.workers.dev`
+  causes `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` because Cloudflare's wildcard SSL cert
+  for `*.workers.dev` does not cover nested subdomains (e.g. `*.*.workers.dev`).
+  This is a Cloudflare platform limitation, not a code bug.
+
+### Requirements for real artist subdomains
+1. Register a custom domain (e.g. `yourdomain.com`)
+2. Add it to Cloudflare DNS
+3. Create a wildcard DNS record: `*.yourdomain.com` → CNAME to your worker
+4. In Cloudflare dashboard, add `*.yourdomain.com` as a Custom Domain on your Worker
+5. Cloudflare will auto-provision a wildcard SSL cert for `*.yourdomain.com`
+6. Then `demo.yourdomain.com` will resolve correctly and the worker's
+   `parseHostContext()` will extract `demo` as the artist slug
+
+### Testing without subdomains
+Use the query param: `https://your-site.com/?artist=demo`
+
 ## Before adding paid services
 Get explicit approval, then remove the guardrails and update this file.

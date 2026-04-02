@@ -28,7 +28,10 @@ function normalizeStop(raw: Record<string, unknown>): Stop {
 
 export async function loadStops(): Promise<Stop[]> {
   try {
-    let response = await fetch('/api/stops')
+    // Forward ?artist= param from page URL so worker can scope stops
+    const artistParam = new URLSearchParams(window.location.search).get('artist')
+    const stopsUrl = artistParam ? `/api/stops?artist=${encodeURIComponent(artistParam)}` : '/api/stops'
+    let response = await fetch(stopsUrl)
     if (!response.ok) {
       response = await fetch('/data/stops.all.json')
     }

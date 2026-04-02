@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Plus, Trash2, Palette } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
@@ -19,6 +19,14 @@ interface AdminArtist {
   site_password: string | null
   created_at: string
   updated_at: string
+}
+
+interface SimpleStop {
+  id: string
+  order: number
+  city: string
+  venue: string
+  artist_id: string | null
 }
 
 const API = '/api/admin'
@@ -56,6 +64,8 @@ export function AdminArtistsPage() {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [allStops, setAllStops] = useState<SimpleStop[]>([])
+  const [stopSearch, setStopSearch] = useState('')
 
   const fetchArtists = useCallback(async () => {
     try {
@@ -68,6 +78,13 @@ export function AdminArtistsPage() {
     } catch {
       setLoadError('Failed to load artists')
     }
+    try {
+      const stopsRes = await adminFetch('/stops')
+      if (stopsRes.ok) {
+        const stopsData = await stopsRes.json() as SimpleStop[]
+        setAllStops(Array.isArray(stopsData) ? stopsData : [])
+      }
+    } catch { /* non-fatal */ }
   }, [])
 
   useEffect(() => { fetchArtists() }, [fetchArtists])
@@ -95,6 +112,36 @@ export function AdminArtistsPage() {
   const updateField = <K extends keyof AdminArtist>(key: K, value: AdminArtist[K]) => {
     if (selected) setSelected({ ...selected, [key]: value })
   }
+
+  // Stops assigned to the currently selected artist
+  const assignedStops = useMemo(
+    () => selected && !editingNew ? allStops.filter(s => s.artist_id === selected.id) : [],
+    [allStops, selected, editingNew]
+  )
+  const unassignedStops = useMemo(() => {
+    const q = stopSearch.toLowerCase().trim()
+    const available = allStops.filter(s => !s.artist_id || (selected && s.artist_id === selected.id))
+    return q ? available.filter(s => s.city.toLowerCase().includes(q) || s.venue.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)) : available
+  }, [allStops, selected, stopSearch])
+
+  const toggleStopAssignment = useCallback(async (stopId: string, assign: boolean) => {
+    if (!selected || editingNew) return
+    try {
+      const res = await adminFetch(`/stops/${encodeURIComponent(stopId)}/artist`, {
+        method: 'PUT',
+        body: JSON.stringify({ artist_id: assign ? selected.id : null }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError((data as { error?: string }).error || 'Failed to update')
+        return
+      }
+      // Update local state immediately
+      setAllStops(prev => prev.map(s => s.id === stopId ? { ...s, artist_id: assign ? selected.id : null } : s))
+    } catch {
+      setError('Failed to update stop assignment')
+    }
+  }, [selected, editingNew])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -370,17 +417,48 @@ export function AdminArtistsPage() {
                     />
                   </label>
 
-                  {/* Placeholder URL fields */}
-                  <label className="admin-page__label span2">
-                    Logo URL
-                    <input
-                      type="url"
-                      value={selected.logo_url ?? ''}
-                      onChange={(e) => updateField('logo_url', e.target.value || null)}
-                      className="admin-page__input"
-                      placeholder="https://..."
-                    />
-                  </label>
+                  {/* Logo: URL input or file upload (stored as data URL) */}
+                  <div className="admin-page__label span2">
+                    Logo
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <input
+                        type="url"
+                        value={selected.logo_url && !selected.logo_url.startsWith('data:') ? selected.logo_url : ''}
+                        onChange={(e) => updateField('logo_url', e.target.value || null)}
+                        className="admin-page__input"
+                        placeholder="https://... or upload below"
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            if (file.size > 512 * 1024) {
+                              setError('Logo must be under 512 KB')
+                              return
+                            }
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              if (typeof reader.result === 'string') {
+                                updateField('logo_url', reader.result)
+                              }
+                            }
+                            reader.readAsDataURL(file)
+                          }}
+                        />
+                        {selected.logo_url && (
+                          <img
+                            src={selected.logo_url}
+                            alt="Logo preview"
+                            style={{ height: 32, maxWidth: 120, objectFit: 'contain', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
                   {error && <p className="admin-page__error span2">{error}</p>}
                   <div className="admin-page__form-actions span2">
@@ -402,6 +480,45 @@ export function AdminArtistsPage() {
                     </button>
                   </div>
                 </form>
+
+                {/* Stop assignment section (only for existing artists) */}
+                {!editingNew && selected.id && (
+                  <div style={{ marginTop: 'var(--space-6)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
+                    <h3 className="admin-page__subtitle">Assigned Stops ({assignedStops.length})</h3>
+                    {assignedStops.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 'var(--space-4)' }}>
+                        {assignedStops.map(s => (
+                          <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', background: 'rgba(var(--accent-rgb), 0.06)', borderRadius: 6, fontSize: 'var(--font-size-sm)' }}>
+                            <span style={{ color: 'var(--text)' }}>#{s.order} {s.city} — {s.venue}</span>
+                            <button type="button" onClick={() => toggleStopAssignment(s.id, false)} className="admin-page__inline-btn" style={{ flexShrink: 0 }}>Remove</button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="admin-page__muted">No stops assigned to this artist.</p>
+                    )}
+                    <h4 style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: '0 0 var(--space-2) 0' }}>Add stops</h4>
+                    <input
+                      type="search"
+                      placeholder="Search stops by city, venue, id..."
+                      value={stopSearch}
+                      onChange={(e) => setStopSearch(e.target.value)}
+                      className="admin-page__input"
+                      style={{ width: '100%', marginBottom: 'var(--space-2)' }}
+                    />
+                    <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {unassignedStops.filter(s => s.artist_id !== selected.id).slice(0, 30).map(s => (
+                        <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', fontSize: 'var(--font-size-sm)' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>#{s.order} {s.city} — {s.venue}</span>
+                          <button type="button" onClick={() => toggleStopAssignment(s.id, true)} className="admin-page__inline-btn" style={{ flexShrink: 0 }}>Assign</button>
+                        </div>
+                      ))}
+                      {unassignedStops.filter(s => s.artist_id !== selected.id).length === 0 && (
+                        <p className="admin-page__muted" style={{ margin: 0 }}>{stopSearch ? 'No matches.' : 'All stops are assigned.'}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <p className="admin-page__muted">Select an artist to edit, or add a new one.</p>

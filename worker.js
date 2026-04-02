@@ -1128,6 +1128,25 @@ export default {
         return jsonResponse({ error: 'Not Found' }, 404)
       }
 
+      // --- Admin: assign/unassign artist on a stop (PATCH artist_id only) ---
+      const stopArtistMatch = url.pathname.match(/^\/api\/admin\/stops\/([^/]+)\/artist$/)
+      if (stopArtistMatch && request.method === 'PUT') {
+        const stopId = decodeURIComponent(stopArtistMatch[1])
+        let body
+        try { body = await request.json() } catch { return jsonResponse({ error: 'Invalid JSON' }, 400) }
+        const artistId = body.artist_id != null ? String(body.artist_id) : null
+        try {
+          const info = await env.DB.prepare(
+            `UPDATE stops SET artist_id = ?, updated_at = datetime('now') WHERE id = ?`
+          ).bind(artistId || null, stopId).run()
+          if (info.meta.changes === 0) return jsonResponse({ error: 'Stop not found' }, 404)
+          return jsonResponse({ ok: true })
+        } catch (err) {
+          console.error('[api/admin/stops/:id/artist]', err)
+          return jsonResponse({ error: 'Failed to update stop artist' }, 500)
+        }
+      }
+
       // --- Admin stops CRUD ---
       const adminStopsMatch = url.pathname.match(/^\/api\/admin\/stops\/?(.*)$/)
       if (adminStopsMatch) {
@@ -1406,10 +1425,10 @@ export default {
               results = []
             }
           } else {
-            // Platform/admin: return all stops with NULL artist_id (platform stops)
+            // Platform: return ALL stops (the platform is the global view)
             const q = await env.DB.prepare(
               `SELECT id, stop_order AS "order", city, country, venue, address, lat, lng, timeline, notes
-               FROM stops WHERE artist_id IS NULL ORDER BY stop_order ASC`
+               FROM stops ORDER BY stop_order ASC`
             ).all()
             results = q.results ?? []
           }

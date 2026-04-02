@@ -174,6 +174,12 @@ export function AdminPage() {
           if (Array.isArray(verData)) setVersions(verData)
         })
         .catch(() => {})
+      adminFetch('/artists')
+        .then((artRes) => (artRes.ok ? artRes.json() : null))
+        .then((artData) => {
+          if (Array.isArray(artData)) setArtistOptions(artData.map((a: AdminArtistOption) => ({ id: a.id, slug: a.slug, name: a.name })))
+        })
+        .catch(() => {})
     })
   }, [])
 
@@ -208,6 +214,12 @@ export function AdminPage() {
         .then((verRes) => (verRes.ok ? verRes.json() : null))
         .then((verData) => {
           if (Array.isArray(verData)) setVersions(verData)
+        })
+        .catch(() => {})
+      adminFetch('/artists')
+        .then((artRes) => (artRes.ok ? artRes.json() : null))
+        .then((artData) => {
+          if (Array.isArray(artData)) setArtistOptions(artData.map((a: AdminArtistOption) => ({ id: a.id, slug: a.slug, name: a.name })))
         })
         .catch(() => {})
     })
