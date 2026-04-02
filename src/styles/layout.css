@@ -122,15 +122,15 @@
 .summary-strip__item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 10px;
+  gap: 3px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .summary-strip__item strong {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
@@ -210,14 +210,14 @@
 
 .overview-button {
   background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  padding: 8px 16px;
-  color: var(--text-muted);
+  padding: 10px 20px;
+  color: var(--text-secondary);
   font-family: var(--font-family);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
   backdrop-filter: blur(8px);

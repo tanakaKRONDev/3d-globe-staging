@@ -60,11 +60,11 @@ export function StopPanel({ stop, onCollapseToggle, buildingsPendingUpdate }: St
         </div>
         <h3
           style={{
-            fontSize: '1.15rem',
+            fontSize: '1.35rem',
             color: 'var(--text)',
-            fontWeight: 600,
+            fontWeight: 700,
             textTransform: 'uppercase',
-            letterSpacing: '0.02em',
+            letterSpacing: '0.01em',
             margin: 0,
           }}
         >

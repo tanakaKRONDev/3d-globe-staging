@@ -125,20 +125,20 @@ export function createVenueMarker(stop: Stop, isSelected = false): Entity {
       scaleByDistance: new NearFarScalar(1_500_000, 1.0, 15_000_000, 0.6),
     },
     label: {
-      text: stop.venue.length > 24 ? stop.city : stop.venue,
-      font: '12px Roboto, sans-serif',
+      text: stop.venue.length > 28 ? stop.city : stop.venue,
+      font: '500 14px Roboto, sans-serif',
       fillColor: isSelected
         ? Color.fromCssColorString('#E7D1A7')
-        : Color.fromCssColorString('rgba(220, 225, 235, 0.9)'),
-      outlineColor: Color.fromCssColorString('rgba(0, 0, 0, 0.7)'),
-      outlineWidth: 3,
+        : Color.WHITE,
+      outlineColor: Color.fromCssColorString('rgba(0, 0, 0, 0.85)'),
+      outlineWidth: 4,
       style: LabelStyle.FILL_AND_OUTLINE,
       verticalOrigin: VerticalOrigin.TOP,
       horizontalOrigin: HorizontalOrigin.CENTER,
-      pixelOffset: new Cartesian2(0, 22),
+      pixelOffset: new Cartesian2(0, 24),
       disableDepthTestDistance: 0,
-      distanceDisplayCondition: new DistanceDisplayCondition(0, 12_000_000),
-      scaleByDistance: new NearFarScalar(1_000_000, 1.0, 12_000_000, 0.7),
+      distanceDisplayCondition: new DistanceDisplayCondition(0, 8_000_000),
+      scaleByDistance: new NearFarScalar(800_000, 1.0, 8_000_000, 0.8),
     }
   })
   return entity
@@ -253,7 +253,7 @@ export class VenueMarkerManager {
           existingMarker.label.fillColor = new ConstantProperty(
             isSelected
               ? Color.fromCssColorString('#E7D1A7')
-              : Color.fromCssColorString('rgba(220, 225, 235, 0.9)')
+              : Color.WHITE
           )
         }
       } else {
@@ -275,7 +275,7 @@ export class VenueMarkerManager {
         entity.label.fillColor = new ConstantProperty(
           isSelected
             ? Color.fromCssColorString('#E7D1A7')
-            : Color.fromCssColorString('rgba(220, 225, 235, 0.9)')
+            : Color.WHITE
         )
       }
     }
