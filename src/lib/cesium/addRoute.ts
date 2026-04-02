@@ -12,7 +12,6 @@ import {
   ConstantProperty
 } from 'cesium'
 import type { Stop } from '../data/types'
-import { SHOW_ROUTE_ARCS } from '../../config/features'
 
 /**
  * Build arc positions between two exact endpoints.
@@ -105,20 +104,20 @@ export class RouteManager {
   private createRouteSegment(start: Cartesian3, end: Cartesian3, fromStopId: string, toStopId: string, segmentIndex: number): Entity {
     const positions = buildArcPositions(start, end)
 
-    // Create visible polyline with deeper golden glow
+    // Cool white / pale blue arc — thin, subtle glow, consistent across all artists
     const routeEntity = new Entity({
       id: `route-segment-${segmentIndex}`,
       polyline: {
         positions: positions,
-        width: 6, // Thicker for better visibility
-        arcType: ArcType.NONE, // Use our custom arc points
+        width: 1.8,
+        arcType: ArcType.NONE,
         clampToGround: false,
         material: new PolylineGlowMaterialProperty({
-          glowPower: new ConstantProperty(0.3), // More visible glow
-          taperPower: new ConstantProperty(1.0), // No taper for consistent visibility
-          color: new ConstantProperty(Color.fromCssColorString('#D4AF37').withAlpha(0.95)) // Deeper golden color
+          glowPower: new ConstantProperty(0.15),
+          taperPower: new ConstantProperty(1.0),
+          color: new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.6))
         }),
-        show: SHOW_ROUTE_ARCS,
+        show: true,
         zIndex: 1000,
         distanceDisplayCondition: undefined,
         // Far-side occlusion: segment behind globe draws fully transparent
@@ -137,14 +136,13 @@ export class RouteManager {
   }
 
   /**
-   * Toggle route visibility. AND with SHOW_ROUTE_ARCS so arcs can be hidden via feature flag.
+   * Toggle route visibility (overview = visible, venue = hidden).
    */
   setRouteVisible(visible: boolean): void {
-    const show = SHOW_ROUTE_ARCS && visible
     this.routeEntities.forEach((entity) => {
-      entity.show = new ConstantProperty(show)
+      entity.show = new ConstantProperty(visible)
       if (entity.polyline) {
-        entity.polyline.show = new ConstantProperty(show)
+        entity.polyline.show = new ConstantProperty(visible)
       }
     })
   }
@@ -166,11 +164,11 @@ export class RouteManager {
       const material = entity.polyline.material as PolylineGlowMaterialProperty
       if (material) {
         if (highlight) {
-          material.glowPower = new ConstantProperty(0.25) // Stronger glow when highlighted
-          material.color = new ConstantProperty(Color.fromCssColorString('#E7D1A7').withAlpha(1.0)) // Full opacity
+          material.glowPower = new ConstantProperty(0.25)
+          material.color = new ConstantProperty(Color.fromCssColorString('#D0E0F0').withAlpha(0.85))
         } else {
-          material.glowPower = new ConstantProperty(0.15) // Normal glow
-          material.color = new ConstantProperty(Color.fromCssColorString('#E7D1A7').withAlpha(0.8)) // Normal transparency
+          material.glowPower = new ConstantProperty(0.15)
+          material.color = new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.6))
         }
       }
     }
