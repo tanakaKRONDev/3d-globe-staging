@@ -9,13 +9,14 @@ import {
   PolylineGlowMaterialProperty,
   ColorMaterialProperty,
   ArcType,
-  ConstantProperty
+  ConstantProperty,
+  CallbackProperty,
+  JulianDate
 } from 'cesium'
 import type { Stop } from '../data/types'
 
 /**
  * Build arc positions between two exact endpoints.
- * Uses the EXACT start/end Cartesian3 (no recomputation) for perfect marker alignment.
  */
 function buildArcPositions(start: Cartesian3, end: Cartesian3): Cartesian3[] {
   const startCarto = Cartographic.fromCartesian(start, Ellipsoid.WGS84)
@@ -39,26 +40,27 @@ function buildArcPositions(start: Cartesian3, end: Cartesian3): Cartesian3[] {
   return out
 }
 
-/**
- * Premium route visualization utilities for connecting tour stops
- */
+/** Duration in seconds for one full tracer traversal of an arc */
+const TRACER_LOOP_SEC = 6
+/** Fraction of the arc that the bright tracer covers */
+const TRACER_LENGTH = 0.12
 
 /**
- * Creates elegant route polylines connecting tour stops in order
+ * Route visualization with animated tracers.
  */
 export class RouteManager {
   private viewer: Viewer
   private routeEntities: Entity[] = []
+  private tracerEntities: Entity[] = []
+  private arcPositionsCache: Cartesian3[][] = []
   private lastRouteStopIds = ''
+  private tracerStartTime = 0
 
   constructor(viewer: Viewer) {
     this.viewer = viewer
+    this.tracerStartTime = Date.now() / 1000
   }
 
-  /**
-   * Builds the route polyline from stops sorted by stop.order (all points with coords).
-   * Only rebuilds when stop order/ids change (avoids re-adding on every render).
-   */
   addTourRoute(stops: Stop[]): void {
     if (stops.length < 2) {
       if (this.routeEntities.length > 0) {
@@ -80,8 +82,6 @@ export class RouteManager {
       markerPositions.set(stop.id, Cartesian3.fromDegrees(stop.lng!, stop.lat!, 0))
     }
 
-    console.log(`[Route] Creating route for ${sortedStops.length} stops`)
-
     for (let i = 0; i < sortedStops.length - 1; i++) {
       const fromStop = sortedStops[i]
       const toStop = sortedStops[i + 1]
@@ -89,50 +89,96 @@ export class RouteManager {
       const end = markerPositions.get(toStop.id)
 
       if (start && end) {
-        const routeSegment = this.createRouteSegment(start, end, fromStop.id, toStop.id, i)
-        this.viewer.entities.add(routeSegment)
-        this.routeEntities.push(routeSegment)
+        const positions = buildArcPositions(start, end)
+        this.arcPositionsCache.push(positions)
+
+        // Base arc: cool white/blue with soft glow
+        const baseEntity = new Entity({
+          id: `route-${i}`,
+          polyline: {
+            positions,
+            width: 2.5,
+            arcType: ArcType.NONE,
+            clampToGround: false,
+            material: new PolylineGlowMaterialProperty({
+              glowPower: new ConstantProperty(0.2),
+              taperPower: new ConstantProperty(1.0),
+              color: new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.45))
+            }),
+            show: true,
+            zIndex: 1000,
+            depthFailMaterial: new ColorMaterialProperty(Color.fromAlpha(Color.WHITE, 0.0))
+          },
+        })
+        this.viewer.entities.add(baseEntity)
+        this.routeEntities.push(baseEntity)
+
+        // Tracer: bright short subsection that slides along the arc
+        const segIdx = i
+        const tracerEntity = new Entity({
+          id: `tracer-${i}`,
+          polyline: {
+            positions: new CallbackProperty((_time: JulianDate, result?: Cartesian3[]) => {
+              return this.getTracerPositions(segIdx, result)
+            }, false) as unknown as Cartesian3[],
+            width: 3.5,
+            arcType: ArcType.NONE,
+            clampToGround: false,
+            material: new PolylineGlowMaterialProperty({
+              glowPower: new ConstantProperty(0.4),
+              taperPower: new ConstantProperty(1.0),
+              color: new ConstantProperty(Color.fromCssColorString('#E8F0FF').withAlpha(0.9))
+            }),
+            show: true,
+            zIndex: 1001,
+            depthFailMaterial: new ColorMaterialProperty(Color.fromAlpha(Color.WHITE, 0.0))
+          },
+        })
+        this.viewer.entities.add(tracerEntity)
+        this.tracerEntities.push(tracerEntity)
       }
     }
-
-    console.log(`[Route] Added ${this.routeEntities.length} route segments`)
   }
 
   /**
-   * Creates a single route segment between two exact positions (same Cartesian3 as markers)
+   * Compute the tracer subsection positions for a given segment at the current time.
+   * Each segment gets a staggered phase offset so tracers don't all move in sync.
    */
-  private createRouteSegment(start: Cartesian3, end: Cartesian3, fromStopId: string, toStopId: string, segmentIndex: number): Entity {
-    const positions = buildArcPositions(start, end)
+  private getTracerPositions(segmentIndex: number, result?: Cartesian3[]): Cartesian3[] {
+    const positions = this.arcPositionsCache[segmentIndex]
+    if (!positions || positions.length < 2) return result ?? []
 
-    // Cool white / pale blue arc — thin, subtle glow, consistent across all artists
-    const routeEntity = new Entity({
-      id: `route-segment-${segmentIndex}`,
-      polyline: {
-        positions: positions,
-        width: 1.8,
-        arcType: ArcType.NONE,
-        clampToGround: false,
-        material: new PolylineGlowMaterialProperty({
-          glowPower: new ConstantProperty(0.15),
-          taperPower: new ConstantProperty(1.0),
-          color: new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.6))
-        }),
-        show: true,
-        zIndex: 1000,
-        distanceDisplayCondition: undefined,
-        // Far-side occlusion: segment behind globe draws fully transparent
-        depthFailMaterial: new ColorMaterialProperty(Color.fromAlpha(Color.WHITE, 0.0))
-      },
-      // Store route metadata
-      properties: {
-        isRouteSegment: true,
-        fromStopId,
-        toStopId,
-        segmentIndex
-      }
-    })
+    const elapsed = Date.now() / 1000 - this.tracerStartTime
+    // Stagger each segment by a fraction of the loop so they cascade
+    const phase = (segmentIndex * 0.37) % 1
+    const t = ((elapsed / TRACER_LOOP_SEC + phase) % 1)
 
-    return routeEntity
+    const count = positions.length
+    const startFrac = t
+    const endFrac = t + TRACER_LENGTH
+
+    const startIdx = Math.floor(startFrac * (count - 1))
+    const endIdx = Math.min(Math.ceil(endFrac * (count - 1)), count - 1)
+
+    // Wrap around: if tracer extends past end, just clamp to tail
+    const from = Math.max(0, Math.min(startIdx, count - 1))
+    const to = Math.max(from, Math.min(endIdx, count - 1))
+
+    if (from >= to) {
+      // At the very end — show last 2 points to avoid zero-length polyline
+      const out = result ?? []
+      out.length = 0
+      out.push(positions[count - 2])
+      out.push(positions[count - 1])
+      return out
+    }
+
+    const out = result ?? []
+    out.length = 0
+    for (let i = from; i <= to; i++) {
+      out.push(positions[i])
+    }
+    return out
   }
 
   /**
@@ -141,80 +187,53 @@ export class RouteManager {
   setRouteVisible(visible: boolean): void {
     this.routeEntities.forEach((entity) => {
       entity.show = new ConstantProperty(visible)
-      if (entity.polyline) {
-        entity.polyline.show = new ConstantProperty(visible)
-      }
+      if (entity.polyline) entity.polyline.show = new ConstantProperty(visible)
+    })
+    this.tracerEntities.forEach((entity) => {
+      entity.show = new ConstantProperty(visible)
+      if (entity.polyline) entity.polyline.show = new ConstantProperty(visible)
     })
   }
 
-  /**
-   * Routes are always visible - no dynamic visibility updates needed
-   */
   updateRouteVisibility(): void {
-    // No-op - routes are always visible to prevent any blinking
-    // All visibility is handled at creation time
+    // No-op — visibility controlled by setRouteVisible
   }
 
-  /**
-   * Highlights a specific route segment (for future interactivity)
-   */
   highlightSegment(segmentIndex: number, highlight: boolean = true): void {
     const entity = this.routeEntities[segmentIndex]
     if (entity && entity.polyline) {
       const material = entity.polyline.material as PolylineGlowMaterialProperty
       if (material) {
         if (highlight) {
-          material.glowPower = new ConstantProperty(0.25)
-          material.color = new ConstantProperty(Color.fromCssColorString('#D0E0F0').withAlpha(0.85))
+          material.glowPower = new ConstantProperty(0.3)
+          material.color = new ConstantProperty(Color.fromCssColorString('#D0E0F0').withAlpha(0.7))
         } else {
-          material.glowPower = new ConstantProperty(0.15)
-          material.color = new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.6))
+          material.glowPower = new ConstantProperty(0.2)
+          material.color = new ConstantProperty(Color.fromCssColorString('#B8CCE8').withAlpha(0.45))
         }
       }
     }
   }
 
-  /**
-   * Gets all route entities
-   */
   getRouteEntities(): Entity[] {
-    return [...this.routeEntities]
+    return [...this.routeEntities, ...this.tracerEntities]
   }
 
-  /**
-   * Removes all route entities
-   */
   clearRoutes(): void {
-    this.routeEntities.forEach(entity => {
-      this.viewer.entities.remove(entity)
-    })
+    this.routeEntities.forEach(entity => this.viewer.entities.remove(entity))
+    this.tracerEntities.forEach(entity => this.viewer.entities.remove(entity))
     this.routeEntities = []
-    console.log('[Route] Cleared all route segments')
+    this.tracerEntities = []
+    this.arcPositionsCache = []
   }
 
-  /**
-   * Creates a complete tour route with all segments
-   */
   static createTourRoute(viewer: Viewer, stops: Stop[]): RouteManager {
     const routeManager = new RouteManager(viewer)
     routeManager.addTourRoute(stops)
     return routeManager
   }
 
-  /**
-   * Animates route appearance (for future enhancement)
-   */
-  animateRouteAppearance(duration: number = 2000): void {
-    // Future implementation: animate route segments appearing one by one
-    // This could be used when the tour route is first displayed
-    console.log(`[Route] Route animation would take ${duration}ms`)
-  }
-
-  /**
-   * Cleanup resources
-   */
   destroy(): void {
     this.clearRoutes()
   }
 }
-
