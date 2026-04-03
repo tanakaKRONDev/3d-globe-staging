@@ -9,6 +9,3 @@ export const SHOW_COORDINATES_IN_PANEL = false
 
 /** Show "Stop #" in the right-side stop panel footer. */
 export const SHOW_STOP_NUMBER_IN_PANEL = false
-
-/** Show route/arc lines between stops in overview mode. */
-export const SHOW_ROUTE_ARCS = true

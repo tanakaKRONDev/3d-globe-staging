@@ -99,7 +99,6 @@ function App() {
   const selectStop = useCallback((stopId: string) => {
     const stop = stops.find((s) => s.id === stopId)
     if (!stop || stop.lat == null || stop.lng == null) return
-    console.log(`[App] Selecting stop: ${stop.city} - ${stop.venue}`)
     setSelectedStopId(stopId)
     setLastSelectedStopId(stopId)
     setViewMode('venue')
@@ -118,19 +117,16 @@ function App() {
     setMobilePanelCollapsed(false) // reset for next selection
 
     if (flyToOverviewAboveStopRef.current && anchorStop && anchorStop.lat != null && anchorStop.lng != null) {
-      console.log('[App] Overview: flying out above last venue')
       flyToOverviewAboveStopRef.current(anchorStop).then(() => {
         setSelectedStopId(null)
       })
     } else if (flyToOverviewRef.current && stops.length > 0) {
-      console.log('[App] Overview: no anchor, using default')
       flyToOverviewRef.current(stops)
       setSelectedStopId(null)
     }
   }, [stops, lastSelectedStopId, selectedStopId])
 
   const handleImageryReady = useCallback(() => {
-    console.log('[App] Imagery preload completed')
     setImageryReady(true)
   }, [])
 
@@ -152,12 +148,9 @@ function App() {
   const handleGlobeReady = useCallback((cesiumViewer: Viewer, premiumCameraManager: PremiumCameraManager) => {
     setViewer(cesiumViewer)
     setCameraManager(premiumCameraManager)
-    console.log('[App] Globe ready for interactions')
-    
-    // Listen for first frame rendered
+
     const onFirstFrame = () => {
       cesiumViewer.scene.postRender.removeEventListener(onFirstFrame)
-      console.log('[App] First frame rendered')
       setViewerReady(true)
     }
     

@@ -24,7 +24,7 @@ export interface ViewerCreationResult {
   onImageryReady: (callback: () => void) => void
 }
 
-export type MapMode = 'overview' | 'venue'
+type MapMode = 'overview' | 'venue'
 
 function easeInOutQuad(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
@@ -66,12 +66,8 @@ export function setMapMode(
   requestAnimationFrame(tick)
 }
 
-let viewerCreationCount = 0
-
 export async function createViewer(container: HTMLElement, creditContainer?: HTMLElement): Promise<ViewerCreationResult> {
-  viewerCreationCount++
-  console.log(`[Cesium] createViewer called (count: ${viewerCreationCount})`)
-  
+
   // Create terrain provider (no Ion required)
   const terrainProvider = new EllipsoidTerrainProvider()
 
@@ -159,7 +155,6 @@ export async function createViewer(container: HTMLElement, creditContainer?: HTM
       const osmReady = (osm as unknown as { _ready?: boolean })._ready !== false
       if ((gibsReady || osmReady) && !imageryReady) {
         imageryReady = true
-        console.log('[Cesium] Imagery layers ready')
         imageryReadyCallback?.()
         resolve()
       } else {

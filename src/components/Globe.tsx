@@ -89,7 +89,6 @@ export function Globe({
 
   // Stable callback to avoid recreating the onReady function
   const onReadyCallback = useCallback((viewer: Viewer, cameraManager: PremiumCameraManager) => {
-    console.log('[Cesium] Globe ready for interactions')
     onReady?.(viewer, cameraManager)
   }, [onReady])
 
@@ -111,7 +110,6 @@ export function Globe({
 
     autoRotateControllerRef.current?.flyToOverview(anchor)
     allowFlyToSelectedRef.current = true
-    console.log('[Globe] Overview: whole Earth, auto-rotate active')
   }, [])
 
   // Fly out to overview pose above the given stop; returns Promise that resolves when flight completes
@@ -166,7 +164,6 @@ export function Globe({
     if (initOnceRef.current) return
     
     initOnceRef.current = true
-    console.log('[Cesium] init viewer')
 
     const initializeViewer = async () => {
       try {
@@ -188,7 +185,6 @@ export function Globe({
         
         // Set up imagery ready callback
         result.onImageryReady(() => {
-          console.log('[Globe] Imagery ready callback triggered')
           onImageryReady?.()
         })
         
@@ -277,7 +273,6 @@ export function Globe({
 
         // Initialize markers and routes if stops are available
         if (stops.length > 0) {
-          console.log('[Globe] Initializing markers and routes on viewer creation')
           markerManagerRef.current.updateMarkers(stops, selectedStopId)
           if (stops.length > 1) {
             routeManagerRef.current.addTourRoute(stops)
@@ -295,7 +290,6 @@ export function Globe({
 
     // Cleanup on unmount
     return () => {
-      console.log('[Cesium] destroy viewer')
       if (cameraManagerRef.current) {
         cameraManagerRef.current.cancelFlight()
         cameraManagerRef.current = null
@@ -340,7 +334,6 @@ export function Globe({
   // Separate effect to handle onReady callback changes
   useEffect(() => {
     if (isReady && viewerRef.current && cameraManagerRef.current) {
-      console.log('[Cesium] Calling onReady callback (viewer already exists)')
       onReadyCallback(viewerRef.current, cameraManagerRef.current!)
     }
   }, [onReadyCallback, isReady])
@@ -348,12 +341,10 @@ export function Globe({
   // Update markers and routes when stops change or viewer becomes ready
   useEffect(() => {
     if (markerManagerRef.current && stops.length > 0 && isReady) {
-      console.log('[Globe] Updating markers for stops')
       markerManagerRef.current.updateMarkers(stops, selectedStopId)
     }
     
     if (routeManagerRef.current && stops.length > 1 && isReady) {
-      console.log('[Globe] Updating route for stops')
       routeManagerRef.current.addTourRoute(stops)
       routeManagerRef.current.setRouteVisible(viewMode === 'overview')
       viewerRef.current?.scene.requestRender()
@@ -363,8 +354,6 @@ export function Globe({
   // Initialize markers and routes when both viewer is ready and stops are available
   useEffect(() => {
     if (isReady && stops.length > 0 && viewerRef.current && gibsLayerRef.current && osmLayerRef.current) {
-      console.log('[Globe] Viewer and stops ready - initializing markers and routes')
-      
       // Initialize markers
       if (markerManagerRef.current) {
         markerManagerRef.current.updateMarkers(stops, selectedStopId)
@@ -386,7 +375,6 @@ export function Globe({
         })
         routeManagerRef.current?.setRouteVisible(true)
         viewerRef.current.scene.requestRender()
-        console.log('[Globe] Initial overview (southern perspective)')
       }
     }
   }, [isReady, stops, flyToOverview, viewMode]) // Run when either viewer becomes ready OR stops data arrives
