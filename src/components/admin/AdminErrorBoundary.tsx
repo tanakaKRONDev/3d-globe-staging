@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { AdminShell } from '../layout/AdminShell'
+import { adminPath } from '../../lib/admin/adminPaths'
 
 interface State {
   hasError: boolean
@@ -31,7 +32,7 @@ export class AdminErrorBoundary extends React.Component<{ children: React.ReactN
               <p className="admin-page__muted" style={{ marginBottom: '1rem' }}>
                 {this.state.error.message}
               </p>
-              <Link to="/admin" className="admin-page__btn admin-page__btn--primary" onClick={() => this.setState({ hasError: false, error: null })}>
+              <Link to={adminPath('/admin')} className="admin-page__btn admin-page__btn--primary" onClick={() => this.setState({ hasError: false, error: null })}>
                 Try again
               </Link>
             </div>

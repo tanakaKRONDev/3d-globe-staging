@@ -4,6 +4,7 @@ import { ArrowLeft, ShieldOff } from 'lucide-react'
 import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { UnblockIpModal } from '../components/admin/UnblockIpModal'
+import { adminPath } from '../lib/admin/adminPaths'
 import './AdminPage.css'
 
 const API = '/api/admin'
@@ -123,7 +124,7 @@ export function AdminBlockedPage() {
       <div className="admin-page">
         <header className="admin-topbar">
           <div className="admin-topbar__left">
-            <Link to="/admin" className="admin-topbar__back">
+            <Link to={adminPath('/admin')} className="admin-topbar__back">
               <ArrowLeft size={20} /> Back to Admin
             </Link>
             <h1 className="admin-topbar__title">Blocked IPs</h1>

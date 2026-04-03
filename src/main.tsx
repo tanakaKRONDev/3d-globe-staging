@@ -18,6 +18,7 @@ import './styles/artist-shell.css'
 import './styles/admin.css'
 import './index.css'
 import { installTokenlessGuardrails } from './lib/cesium/tokenlessGuardrails'
+import { isAdminSubdomain } from './lib/admin/adminPaths'
 
 installTokenlessGuardrails()
 
@@ -26,11 +27,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ArtistProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
-          <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
-          <Route path="/admin/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
-          <Route path="/admin/artists" element={<AdminErrorBoundary><AdminArtistsPage /></AdminErrorBoundary>} />
+          {isAdminSubdomain ? (
+            <>
+              {/* Admin subdomain: admin routes at root */}
+              <Route path="/" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
+              <Route path="/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
+              <Route path="/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
+              <Route path="/artists" element={<AdminErrorBoundary><AdminArtistsPage /></AdminErrorBoundary>} />
+            </>
+          ) : (
+            <>
+              {/* Main/artist subdomain: public site + /admin fallback */}
+              <Route path="/" element={<App />} />
+              <Route path="/admin" element={<AdminErrorBoundary><AdminPage /></AdminErrorBoundary>} />
+              <Route path="/admin/logs" element={<AdminErrorBoundary><AdminLogsPage /></AdminErrorBoundary>} />
+              <Route path="/admin/blocked" element={<AdminErrorBoundary><AdminBlockedPage /></AdminErrorBoundary>} />
+              <Route path="/admin/artists" element={<AdminErrorBoundary><AdminArtistsPage /></AdminErrorBoundary>} />
+            </>
+          )}
         </Routes>
       </BrowserRouter>
     </ArtistProvider>

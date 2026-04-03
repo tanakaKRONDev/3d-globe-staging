@@ -9,6 +9,25 @@ const ADMIN_COOKIE = 'admin_session'
 const SESSION_MAX_AGE_SEC = 12 * 60 * 60 // 12 hours
 const SITE_AUTH_COOKIE = 'site_auth'
 
+/**
+ * Derive the root domain for cross-subdomain cookies.
+ * e.g. "admin.example.com" → ".example.com"
+ * Returns empty string for localhost / IP / workers.dev (no Domain attr needed).
+ */
+function cookieDomain(hostname) {
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.workers.dev')
+  ) {
+    return ''
+  }
+  const parts = hostname.split('.')
+  // bare domain "example.com" → ".example.com"; subdomain "x.example.com" → ".example.com"
+  const root = parts.length >= 2 ? parts.slice(-2).join('.') : hostname
+  return `.${root}`
+}
+
 /** Fallback branding (mirrors src/config/defaults.ts). */
 const DEFAULT_TITLE = 'WORLD TOUR 2026-2027'
 
@@ -223,16 +242,26 @@ function getAdminSessionCookie(request) {
   return match ? decodeURIComponent(match[1].trim()) : null
 }
 
-/** Set admin_session cookie. Do NOT set Domain so it works on both *.workers.dev and production. */
+/** Set admin_session cookie with cross-subdomain Domain when on production. */
 function sessionCookieHeader(value, request) {
-  const isSecure = new URL(request.url).protocol === 'https:'
-  const s = `${ADMIN_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SEC}`
-  return isSecure ? s : s.replace('; Secure', '')
+  const url = new URL(request.url)
+  const isSecure = url.protocol === 'https:'
+  const domain = cookieDomain(url.hostname)
+  let s = `${ADMIN_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SEC}`
+  if (domain) s += `; Domain=${domain}`
+  if (isSecure) s += '; Secure'
+  return s
 }
 
 /** Clear admin_session cookie (for logout). */
-function clearAdminSessionCookie() {
-  return `${ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`
+function clearAdminSessionCookie(request) {
+  const url = new URL(request.url)
+  const isSecure = url.protocol === 'https:'
+  const domain = cookieDomain(url.hostname)
+  let s = `${ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`
+  if (domain) s += `; Domain=${domain}`
+  if (isSecure) s += '; Secure'
+  return s
 }
 
 // --- Site auth: WebCrypto-only cookie signing (no Node APIs) ---
@@ -306,15 +335,21 @@ function getSiteAuthCookie(request) {
 const SITE_AUTH_MAX_AGE_SEC_NUM = 604800 // 7 days
 
 function siteAuthCookieHeader(value, request) {
-  const isSecure = new URL(request.url).protocol === 'https:'
+  const url = new URL(request.url)
+  const isSecure = url.protocol === 'https:'
+  const domain = cookieDomain(url.hostname)
   let s = `${SITE_AUTH_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Path=/; Max-Age=${SITE_AUTH_MAX_AGE_SEC_NUM}; SameSite=Lax`
+  if (domain) s += `; Domain=${domain}`
   if (isSecure) s += '; Secure'
   return s
 }
 
 function clearSiteAuthCookie(request) {
-  const isSecure = new URL(request.url).protocol === 'https:'
+  const url = new URL(request.url)
+  const isSecure = url.protocol === 'https:'
+  const domain = cookieDomain(url.hostname)
   let s = `${SITE_AUTH_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`
+  if (domain) s += `; Domain=${domain}`
   if (isSecure) s += '; Secure'
   return s
 }
@@ -597,7 +632,7 @@ export default {
           status: 200,
           headers: {
             'Content-Type': 'application/json',
-            'Set-Cookie': clearAdminSessionCookie(),
+            'Set-Cookie': clearAdminSessionCookie(request),
           },
         })
       }
@@ -1358,7 +1393,21 @@ export default {
         })
       }
 
+      // Admin subdomain: serve admin SPA at root (rewrite / → /admin for ASSETS)
+      const hostCtx = parseHostContext(url)
+      if (hostCtx.type === 'admin') {
+        if (request.method === 'GET' && env.DB) ctx.waitUntil(logPageAccess(env, request, url))
+        // Rewrite bare paths to /admin/* so the SPA index.html is served
+        if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/api/') && !url.pathname.startsWith('/auth/') && !url.pathname.startsWith('/assets/')) {
+          const rewritten = new URL(request.url)
+          rewritten.pathname = '/admin' + (url.pathname === '/' ? '' : url.pathname)
+          return env.ASSETS.fetch(new Request(rewritten.toString(), request))
+        }
+        return env.ASSETS.fetch(request)
+      }
+
       // Skip site gate: /admin (frontend SPA; /api/admin/* already handled above)
+      // Localhost fallback: /admin still works for local dev
       if (url.pathname.startsWith('/admin')) {
         if (request.method === 'GET' && env.DB) ctx.waitUntil(logPageAccess(env, request, url))
         return env.ASSETS.fetch(request)
@@ -1366,7 +1415,6 @@ export default {
 
       // --- Public: GET /api/artist (returns branding for current hostname context) ---
       if (request.method === 'GET' && url.pathname === '/api/artist') {
-        const hostCtx = parseHostContext(url)
         if (hostCtx.type === 'artist' && hostCtx.artistSlug) {
           const branding = await resolveArtistBranding(env.DB, hostCtx.artistSlug)
           if (branding) {
@@ -1411,7 +1459,6 @@ export default {
       // Gated: GET /api/stops (artist-aware: subdomain scopes to artist's stops)
       if (request.method === 'GET' && url.pathname === '/api/stops') {
         try {
-          const hostCtx = parseHostContext(url)
           let results
           if (hostCtx.type === 'artist' && hostCtx.artistSlug) {
             // Artist subdomain: only stops linked to this artist

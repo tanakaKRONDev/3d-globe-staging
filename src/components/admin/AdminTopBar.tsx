@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, RotateCcw, LogOut, FileText, ShieldAlert, Palette } from 'lucide-react'
+import { adminPath, isAdminSubdomain } from '../../lib/admin/adminPaths'
 
 export interface AdminTopBarProps {
   title?: string
@@ -14,24 +15,30 @@ export function AdminTopBar({ title = 'Admin – Stops', onRollbackClick, onLogo
   return (
     <header className="admin-topbar">
       <div className="admin-topbar__left">
-        <Link to="/" className="admin-topbar__back">
-          <ArrowLeft size={20} /> Back to site
-        </Link>
+        {isAdminSubdomain ? (
+          <a href={`${window.location.protocol}//${window.location.hostname.replace(/^admin\./, '')}`} className="admin-topbar__back">
+            <ArrowLeft size={20} /> Back to site
+          </a>
+        ) : (
+          <Link to="/" className="admin-topbar__back">
+            <ArrowLeft size={20} /> Back to site
+          </Link>
+        )}
         <h1 className="admin-topbar__title">{title}</h1>
       </div>
       <div className="admin-topbar__actions">
         {showArtistsLink && (
-          <Link to="/admin/artists" className="admin-topbar__btn admin-topbar__btn--secondary">
+          <Link to={adminPath('/admin/artists')} className="admin-topbar__btn admin-topbar__btn--secondary">
             <Palette size={18} /> Artists
           </Link>
         )}
         {showLogsLink && (
-          <Link to="/admin/logs" className="admin-topbar__btn admin-topbar__btn--secondary">
+          <Link to={adminPath('/admin/logs')} className="admin-topbar__btn admin-topbar__btn--secondary">
             <FileText size={18} /> Logs
           </Link>
         )}
         {showBlockedLink && (
-          <Link to="/admin/blocked" className="admin-topbar__btn admin-topbar__btn--secondary">
+          <Link to={adminPath('/admin/blocked')} className="admin-topbar__btn admin-topbar__btn--secondary">
             <ShieldAlert size={18} /> Blocked
           </Link>
         )}

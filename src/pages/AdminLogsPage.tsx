@@ -5,6 +5,7 @@ import { useBodyClass } from '../lib/ui/useBodyClass'
 import { AdminShell } from '../components/layout/AdminShell'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { ChoiceModal } from '../components/ui/ChoiceModal'
+import { adminPath } from '../lib/admin/adminPaths'
 import './AdminPage.css'
 
 const API = '/api/admin'
@@ -198,7 +199,7 @@ export function AdminLogsPage() {
       <div className="admin-page">
         <header className="admin-topbar">
           <div className="admin-topbar__left">
-            <Link to="/admin" className="admin-topbar__back">
+            <Link to={adminPath('/admin')} className="admin-topbar__back">
               <ArrowLeft size={20} /> Back to Admin
             </Link>
             <h1 className="admin-topbar__title">Access logs</h1>
